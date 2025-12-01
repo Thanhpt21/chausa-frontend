@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, Table, Spin, message, Form, InputNumber, Button, Select, Space, Tooltip, Card, Input, Radio, FormInstance  } from 'antd';
+import { Modal, Table, Spin, message, Form, InputNumber, Button, Select, Space, Tooltip, Card, Input, Radio } from 'antd';
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useExportDetailsByExportId } from '@/hooks/export-detail/useExportDetailsByExportId';
 import { formatVND } from '@/utils/helpers';
@@ -31,11 +31,13 @@ const ExportDetailModal: React.FC<ExportDetailModalProps> = ({ visible, exportId
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [selectedColor, setSelectedColor] = useState<number | undefined>(undefined);
   const [selectedColorTitle, setSelectedColorTitle] = useState<string>('');
-  const [selectedSize, setSelectedSize] = useState<string>(''); // 👈 THÊM STATE CHO SIZE
+  const [selectedSize, setSelectedSize] = useState<string>('');
   const [isProductAdded, setIsProductAdded] = useState(false);
   const [quantityError, setQuantityError] = useState<string>('');
   const [isQuantityExceeded, setIsQuantityExceeded] = useState<boolean>(false);
-  const [existingColorsForSelectedProduct, setExistingColorsForSelectedProduct] = useState<string[]>([]);
+  const [existingCombinations, setExistingCombinations] = useState<string[]>([]);
+  const [currentStockQuantity, setCurrentStockQuantity] = useState<number>(0);
+  const [stockRefreshKey, setStockRefreshKey] = useState(0); // 👈 KEY ĐỂ FORCE REFETCH
 
   useEffect(() => {
     if (visible) {
@@ -48,19 +50,25 @@ const ExportDetailModal: React.FC<ExportDetailModalProps> = ({ visible, exportId
       setSelectedColor(undefined);
       setSelectedProduct(null);
       setSelectedColorTitle('');
-      setSelectedSize(''); // 👈 RESET SIZE
+      setSelectedSize('');
       setQuantityError('');
       setIsQuantityExceeded(false);
-      setExistingColorsForSelectedProduct([]);
-      
-      refetch().then(() => {
-        // Có thể thêm logic nếu cần sau khi refetch hoàn tất
-      });
+      setExistingCombinations([]);
+      setCurrentStockQuantity(0);
+      setStockRefreshKey(0);
     }
-  }, [visible, form, refetch]);
+  }, [visible, form]);
 
   const { data: products, isLoading: isProductsLoading } = useAllProducts({});
-  const { data: colorQuantities, isLoading: isColorLoading, error: colorError } = useColorQuantityByProductId(selectedProduct?.id);
+  
+  // 👈 SỬ DỤNG HOOK VỚI stockRefreshKey ĐỂ FORCE REFETCH MỖI KHI THAY ĐỔI
+  const { 
+    data: productStock, 
+    isLoading: isStockLoading,
+    refetch: manualRefetchProductStock 
+  } = useColorQuantityByProductId(selectedProduct?.id);
+
+  console.log("productStock", productStock)
 
   const quantity = Form.useWatch('quantity', form);
 
@@ -77,6 +85,36 @@ const ExportDetailModal: React.FC<ExportDetailModalProps> = ({ visible, exportId
     }
   }, [quantity, selectedProduct, form]);
 
+  // 👈 HÀM LẤY SỐ LƯỢNG TỒN KHO THEO MÀU VÀ SIZE
+  const getStockQuantity = (colorTitle: string, size: string): number => {
+    if (!productStock?.data || !colorTitle) return 0;
+    
+    const stockItem = productStock.data.find((item: any) => 
+      item.colorTitle === colorTitle && item.size === size
+    );
+    
+    return stockItem ? stockItem.remainingQuantity : 0;
+  };
+
+  // 👈 CẬP NHẬT SỐ LƯỢNG TỒN KHO KHI DỮ LIỆU THAY ĐỔI
+  useEffect(() => {
+    if (selectedColorTitle && selectedSize) {
+      const stockQty = getStockQuantity(selectedColorTitle, selectedSize);
+      setCurrentStockQuantity(stockQty);
+      
+      const currentQuantity = form.getFieldValue('quantity');
+      if (currentQuantity && currentQuantity > stockQty) {
+        setQuantityError(`Số lượng nhập vào (${currentQuantity}) lớn hơn số lượng còn lại trong kho (${stockQty})`);
+        setIsQuantityExceeded(true);
+      } else {
+        setQuantityError('');
+        setIsQuantityExceeded(false);
+      }
+    } else {
+      setCurrentStockQuantity(0);
+    }
+  }, [selectedColorTitle, selectedSize, productStock]);
+
   const onProductChange = (value: string) => {
     const product = products?.find((p) => p.sku === value);
     
@@ -85,7 +123,8 @@ const ExportDetailModal: React.FC<ExportDetailModalProps> = ({ visible, exportId
       setSelectedProductId(product.id);
       setSelectedColor(undefined);
       setSelectedColorTitle('');
-      setSelectedSize(''); // 👈 RESET SIZE KHI ĐỔI SẢN PHẨM
+      setSelectedSize('');
+      setCurrentStockQuantity(0);
       
       form.setFieldsValue({
         productId: product.id,
@@ -93,37 +132,89 @@ const ExportDetailModal: React.FC<ExportDetailModalProps> = ({ visible, exportId
         discountSingle: product?.discountSingle ?? 0,
         discountMultiple: product?.discountMultiple ?? 0,
         discountPercent: product?.discountSingle ?? 0,
-        size: undefined, // 👈 RESET SIZE TRONG FORM
+        size: undefined,
       });
       
       setQuantityError('');
       setIsQuantityExceeded(false);
 
-      const existingColors = data
+      const existingCombos = data
         ?.filter((detail: any) => detail.productId === product.id)
-        .map((detail: any) => detail.colorTitle)
-        .filter((color: string) => color); 
-      setExistingColorsForSelectedProduct(existingColors || []);
+        .map((detail: any) => `${detail.colorTitle}-${detail.size}`);
+      setExistingCombinations(existingCombos || []);
     }
   };
 
-  const onColorChange = (value: any) => {
+  const onColorChange = async (value: any) => {
     const selectedColorData = selectedProduct?.colors?.find((c: any) => c.id === value);
     if (selectedColorData) {
       setSelectedColor(value);
       setSelectedColorTitle(selectedColorData.title || '');
       setQuantityError('');
       setIsQuantityExceeded(false);
-      form.setFieldsValue({ color: value }); 
+      form.setFieldsValue({ color: value });
+
+      // 👈 REFETCH KHI CHỌN MÀU ĐỂ CẬP NHẬT SỐ LƯỢNG
+      if (selectedProduct?.id) {
+        try {
+          await manualRefetchProductStock();
+          const stockQty = getStockQuantity(selectedColorData.title, selectedSize);
+          setCurrentStockQuantity(stockQty);
+        } catch (error) {
+          console.error('Lỗi khi refetch stock:', error);
+        }
+      }
     }
   };
 
-  // 👈 HANDLE SIZE CHANGE
-  const handleSizeChange = (value: string) => {
+  const handleSizeChange = async (value: string) => {
     setSelectedSize(value);
     setQuantityError('');
     setIsQuantityExceeded(false);
+    
+    // 👈 QUAN TRỌNG: REFETCH DỮ LIỆU TỒN KHO KHI CHỌN SIZE
+    if (selectedProduct?.id) {
+      try {
+        await manualRefetchProductStock();
+        
+        // 👈 CẬP NHẬT SỐ LƯỢNG TỒN KHO SAU KHI REFETCH
+        if (selectedColorTitle && value) {
+          const stockQty = getStockQuantity(selectedColorTitle, value);
+          setCurrentStockQuantity(stockQty);
+          
+          // KIỂM TRA LẠI SỐ LƯỢNG ĐÃ NHẬP
+          const currentQuantity = form.getFieldValue('quantity');
+          if (currentQuantity && currentQuantity > stockQty) {
+            setQuantityError(`Số lượng nhập vào (${currentQuantity}) lớn hơn số lượng còn lại trong kho (${stockQty})`);
+            setIsQuantityExceeded(true);
+          }
+        }
+      } catch (error) {
+        console.error('Lỗi khi refetch stock:', error);
+        message.error('Không thể lấy số lượng tồn kho');
+      }
+    }
   };
+
+  // 👈 HOẶC SỬ DỤNG CÁCH NÀY ĐỂ TỰ ĐỘNG REFETCH KHI CÓ SỰ THAY ĐỔI
+  useEffect(() => {
+    const refetchStockData = async () => {
+      if (selectedProduct?.id && (selectedColorTitle || selectedSize)) {
+        try {
+          await manualRefetchProductStock();
+          
+          if (selectedColorTitle && selectedSize) {
+            const stockQty = getStockQuantity(selectedColorTitle, selectedSize);
+            setCurrentStockQuantity(stockQty);
+          }
+        } catch (error) {
+          console.error('Lỗi khi refetch stock:', error);
+        }
+      }
+    };
+
+    refetchStockData();
+  }, [selectedProduct?.id, selectedColorTitle, selectedSize]); // 👈 REFETCH KHI CÓ THAY ĐỔI
 
   const handleQuantityChange = (value: number | null) => {
     if (value === null) {
@@ -133,33 +224,17 @@ const ExportDetailModal: React.FC<ExportDetailModalProps> = ({ visible, exportId
     }
 
     if (selectedColorTitle || selectedSize) {
-      // 👈 KIỂM TRA TỒN KHO CHO CẢ MÀU VÀ SIZE
-      let remainingQuantity = 0;
-      
-      if (selectedColorTitle) {
-        const selectedColorQuantity = colorQuantities?.data.find((item: any) => item.colorTitle === selectedColorTitle);
-        remainingQuantity = selectedColorQuantity ? selectedColorQuantity.remainingQuantity : 0;
-      }
-      // Có thể thêm logic kiểm tra tồn kho theo size nếu cần
-
-      if (value > remainingQuantity) {
-        setQuantityError(``);
-        setIsQuantityExceeded(false);
-        form.setFields([
-          {
-            name: 'quantity',
-            errors: [],
-          },
-        ]);
+      if (value > currentStockQuantity) {
+        setQuantityError(`Số lượng nhập vào (${value}) lớn hơn số lượng còn lại trong kho (${currentStockQuantity})`);
+        setIsQuantityExceeded(true);
+        form.setFields([{ 
+          name: 'quantity', 
+          errors: [`Số lượng nhập vào (${value}) lớn hơn số lượng còn lại trong kho (${currentStockQuantity})`] 
+        }]);
       } else {
         setQuantityError('');
         setIsQuantityExceeded(false);
-        form.setFields([
-          {
-            name: 'quantity',
-            errors: [],
-          },
-        ]);
+        form.setFields([{ name: 'quantity', errors: [] }]);
       }
     }
     
@@ -167,6 +242,19 @@ const ExportDetailModal: React.FC<ExportDetailModalProps> = ({ visible, exportId
       form.setFieldsValue({ discountPercent: selectedProduct?.discountSingle ?? 0 });
     } else if (value >= 2) {
       form.setFieldsValue({ discountPercent: selectedProduct?.discountMultiple ?? 0 });
+    }
+  };
+
+  // 👈 HÀM REFETCH STOCK THỦ CÔNG
+  const refetchStockData = async () => {
+    if (selectedProduct?.id) {
+      try {
+        await manualRefetchProductStock();
+        message.success('Đã cập nhật số lượng tồn kho');
+      } catch (error) {
+        console.error('Lỗi khi refetch stock:', error);
+        message.error('Không thể cập nhật số lượng tồn kho');
+      }
     }
   };
 
@@ -197,7 +285,7 @@ const ExportDetailModal: React.FC<ExportDetailModalProps> = ({ visible, exportId
       key: 'colorTitle',
     },
     {
-      title: 'Size', // 👈 THÊM CỘT SIZE
+      title: 'Size',
       dataIndex: 'size',
       key: 'size',
       render: (size: string) => size || '-',
@@ -249,6 +337,7 @@ const ExportDetailModal: React.FC<ExportDetailModalProps> = ({ visible, exportId
                         await deleteExportDetail(record.id);
                         message.success('Xoá chi tiết sản phẩm thành công');
                         refetch();
+                        refetchExport();
                       } catch {
                         message.error('Xoá thất bại');
                       }
@@ -277,7 +366,6 @@ const ExportDetailModal: React.FC<ExportDetailModalProps> = ({ visible, exportId
       return;
     }
 
-    // 👈 KIỂM TRA ÍT NHẤT MÀU HOẶC SIZE PHẢI ĐƯỢC CHỌN
     if (!values.color && !selectedSize) {
       message.error('Vui lòng chọn màu hoặc size');
       return;
@@ -293,27 +381,18 @@ const ExportDetailModal: React.FC<ExportDetailModalProps> = ({ visible, exportId
       finalColorTitle = finalColorData.title;
     }
 
-    // 👈 KIỂM TRA TRÙNG LẶP THEO CẢ MÀU VÀ SIZE
-    const isCombinationExist = data?.some((detail: any) =>
-      detail.productId === productId &&
-      detail.colorTitle === finalColorTitle &&
-      detail.size === selectedSize &&
-      (!selectedExportDetail || selectedExportDetail.id !== detail.id)
-    );
+    const combinationKey = `${finalColorTitle}-${selectedSize}`;
+    const isCombinationExist = existingCombinations.includes(combinationKey) && 
+      (!selectedExportDetail || selectedExportDetail.colorTitle !== finalColorTitle || selectedExportDetail.size !== selectedSize);
 
     if (isCombinationExist) {
       message.error(`Sản phẩm '${selectedProduct?.title}' với màu '${finalColorTitle}' và size '${selectedSize}' đã tồn tại trong đơn báo giá này.`);
       return;
     }
 
-    // KIỂM TRA TỒN KHO
-    if (finalColorTitle) {
-      const selectedColorQuantity = colorQuantities?.data.find((item: any) => item.colorTitle === finalColorTitle);
-      const remainingQuantity = selectedColorQuantity ? selectedColorQuantity.remainingQuantity : 0;
-
-      if (values.quantity > remainingQuantity) {
-        message.warning(`Số lượng nhập vào (${values.quantity}) lớn hơn số lượng còn lại trong kho (${remainingQuantity})`);
-      }
+    if (values.quantity > currentStockQuantity) {
+      message.error(`Số lượng nhập vào (${values.quantity}) lớn hơn số lượng còn lại trong kho (${currentStockQuantity})`);
+      return;
     }
 
     const { sku, ...valueWithoutSku } = values;
@@ -325,7 +404,7 @@ const ExportDetailModal: React.FC<ExportDetailModalProps> = ({ visible, exportId
         productId,
         discountPercent: values.discountPercent,
         colorTitle: finalColorTitle,
-        size: selectedSize, // 👈 THÊM SIZE VÀO DATA
+        size: selectedSize,
         unit: selectedProduct?.unit || '',
       });
       message.success('Thêm chi tiết đơn báo giá thành công');
@@ -334,11 +413,12 @@ const ExportDetailModal: React.FC<ExportDetailModalProps> = ({ visible, exportId
       setSelectedProduct(null);
       setSelectedColor(undefined);
       setSelectedColorTitle('');
-      setSelectedSize(''); // 👈 RESET SIZE
+      setSelectedSize('');
+      setCurrentStockQuantity(0);
       setIsProductAdded(false);
       setQuantityError('');
       setIsQuantityExceeded(false);
-      setExistingColorsForSelectedProduct([]);
+      setExistingCombinations([]);
       refetch();
       refetchExport();
     } catch (error: any) {
@@ -357,7 +437,7 @@ const ExportDetailModal: React.FC<ExportDetailModalProps> = ({ visible, exportId
         id: selectedExportDetail.id,
         data: {
           ...values,
-          size: selectedSize, // 👈 THÊM SIZE VÀO UPDATE
+          size: selectedSize,
         },
       });
       message.success('Cập nhật chi tiết đơn báo giá thành công');
@@ -370,10 +450,11 @@ const ExportDetailModal: React.FC<ExportDetailModalProps> = ({ visible, exportId
       setSelectedProduct(null);
       setSelectedColor(undefined);
       setSelectedColorTitle('');
-      setSelectedSize(''); // 👈 RESET SIZE
+      setSelectedSize('');
+      setCurrentStockQuantity(0);
       setQuantityError('');
       setIsQuantityExceeded(false);
-      setExistingColorsForSelectedProduct([]);
+      setExistingCombinations([]);
     } catch {
       message.error('Cập nhật chi tiết đơn báo giá thất bại');
     }
@@ -394,7 +475,21 @@ const ExportDetailModal: React.FC<ExportDetailModalProps> = ({ visible, exportId
             layout="vertical"
             onFinish={selectedExportDetail ? onEditFinish : onFinish}
           >
-            <Card title="Chi Tiết sản phẩm" bordered={true} style={{ marginBottom: 20 }}>
+            <Card 
+              title="Chi Tiết sản phẩm" 
+              bordered={true} 
+              style={{ marginBottom: 20 }}
+              extra={
+                <Button 
+                  type="link" 
+                  onClick={refetchStockData}
+                  disabled={!selectedProduct?.id}
+                  loading={isStockLoading}
+                >
+                  🔄 Cập nhật tồn kho
+                </Button>
+              }
+            >
               <Form.Item label="Model" name="sku" rules={[{ required: true, message: 'Vui lòng chọn Model' }]}>
                 {selectedExportDetail ? (
                   <div>{selectedExportDetail.product?.sku}</div>
@@ -439,7 +534,6 @@ const ExportDetailModal: React.FC<ExportDetailModalProps> = ({ visible, exportId
                   onChange={(value) => {
                     const product = products?.find((p) => p.title === value);
                     if (product) {
-                      console.log('Chọn Tên sản phẩm:', product);
                       setSelectedProduct(product);
                       form.setFieldsValue({
                         sku: product.sku,
@@ -465,7 +559,6 @@ const ExportDetailModal: React.FC<ExportDetailModalProps> = ({ visible, exportId
                 />
               </Form.Item>
 
-              {/* 👈 FORM SELECT CHO SIZE */}
               <Form.Item label="Size" name="size">
                 <Select
                   placeholder="Chọn size"
@@ -473,6 +566,7 @@ const ExportDetailModal: React.FC<ExportDetailModalProps> = ({ visible, exportId
                   value={selectedSize}
                   disabled={status === 'CANCELLED'}
                   allowClear
+                  loading={isStockLoading}
                 >
                   {PRODUCT_SIZES.map((size: any) => (
                     <Select.Option key={size} value={size}>
@@ -482,9 +576,31 @@ const ExportDetailModal: React.FC<ExportDetailModalProps> = ({ visible, exportId
                 </Select>
               </Form.Item>
 
+              {(selectedColor || selectedSize) && (
+                <div style={{ marginBottom: 16 }}>
+                  <span style={{ fontWeight: 'bold' }}>Số lượng tồn kho hiện tại: </span>
+                  {isStockLoading ? (
+                    <Spin size="small" />
+                  ) : (
+                    <span style={{ color: currentStockQuantity > 0 ? 'green' : 'red', fontWeight: 'bold' }}>
+                      {currentStockQuantity}
+                    </span>
+                  )}
+                  <Button 
+                    type="link" 
+                    size="small" 
+                    onClick={refetchStockData}
+                    loading={isStockLoading}
+                    style={{ marginLeft: 8 }}
+                  >
+                    🔄
+                  </Button>
+                </div>
+              )}
+
               {!isProductAdded && selectedProduct && selectedProduct.colors?.length > 0 && (
                 <Form.Item label="Chọn màu" name="color">
-                  {isColorLoading ? (
+                  {isStockLoading ? (
                     <Spin size="small" />
                   ) : (
                     <>
@@ -494,18 +610,19 @@ const ExportDetailModal: React.FC<ExportDetailModalProps> = ({ visible, exportId
                       >
                         {selectedProduct.colors
                           .map((color: any) => {
-                            const colorQuantity = colorQuantities?.data.find((item: any) => item.colorTitle === color.title);
-                            const remainingQuantity = colorQuantity ? colorQuantity.remainingQuantity : 0;
-                            const isColorAlreadyAdded = existingColorsForSelectedProduct.includes(color.title);
+                            const stockQty = getStockQuantity(color.title, selectedSize);
+                            const combinationKey = `${color.title}-${selectedSize}`;
+                            const isCombinationAlreadyAdded = existingCombinations.includes(combinationKey);
 
                             return (
                               <Radio.Button
                                 key={color.id}
                                 value={color.id}
-                                // disabled={remainingQuantity <= 0 || isColorAlreadyAdded}
+                                disabled={stockQty <= 0 || isCombinationAlreadyAdded}
+                                style={{ marginBottom: 8 }}
                               >
-                                {color.title} - Số lượng trong kho: {remainingQuantity}
-                                {isColorAlreadyAdded && ' (Đã thêm)'}
+                                {color.title} - Tồn kho: {stockQty}
+                                {isCombinationAlreadyAdded && ' (Đã thêm)'}
                               </Radio.Button>
                             );
                           })}
@@ -515,7 +632,7 @@ const ExportDetailModal: React.FC<ExportDetailModalProps> = ({ visible, exportId
                 </Form.Item>
               )}
 
-              {(selectedColor || selectedSize) && ( // 👈 HIỂN THỊ KHI CÓ MÀU HOẶC SIZE
+              {(selectedColor || selectedSize) && (
                 <Form.Item
                   label="Số lượng"
                   name="quantity"
@@ -526,6 +643,7 @@ const ExportDetailModal: React.FC<ExportDetailModalProps> = ({ visible, exportId
                   <InputNumber
                     placeholder="Nhập số lượng"
                     min={1}
+                    max={currentStockQuantity}
                     style={{ width: '100%' }}
                     disabled={status === 'CANCELLED'}
                     onChange={handleQuantityChange}

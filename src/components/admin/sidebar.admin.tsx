@@ -29,65 +29,64 @@ export default function SidebarAdmin({ collapsed }: SidebarAdminProps) {
           width={collapsed ? 40 : 120}
           preview={false}
         />
-        <div style={{"color": "#c61c2b"}} className="font-bold">Quản trị</div>
       </div>
       <Menu
         mode="inline"
         defaultSelectedKeys={['1']}
         items={[
           {
-            key: '1',
+            key: 'admin',
             icon: <DashboardOutlined />,
             label: <Link href="/admin">Thống kê</Link>,
           },
+          // {
+          //   key: '2',
+          //   icon: <AuditOutlined />,
+          //   label: <Link href="/admin/exportReceipt">Đơn báo giá</Link>,
+          // },
           {
-            key: '2',
-            icon: <AuditOutlined />,
-            label: <Link href="/admin/exportReceipt">Đơn báo giá</Link>,
-          },
-          {
-            key: '3',
+            key: 'transfer',
             icon: <DropboxOutlined />,
             label: <Link href="/admin/transfer">Phiếu xuất kho</Link>,
           },
          
           {
-            key: '4',
+            key: 'product',
             icon: <ProductOutlined />,
             label: <Link href="/admin/product">Sản phẩm</Link>,
           },
-           {
-            key: '5',
-            icon: <ShoppingCartOutlined />,
-            label: <Link href="/admin/purchaseRequest">Phiếu mua hàng</Link>,
-          },
+          //  {
+          //   key: 'purchaseRequest',
+          //   icon: <ShoppingCartOutlined />,
+          //   label: <Link href="/admin/purchaseRequest">Phiếu mua hàng</Link>,
+          // },
           {
-            key: '6',
+            key: 'importReceipt',
             icon: <AuditOutlined />,
             label: <Link href="/admin/importReceipt">Phiếu nhập kho</Link>,
           },
           {
-            key: '7',
+            key: 'customer',
             icon: <UsergroupAddOutlined />,
             label: <Link href="/admin/customer">Khách hàng</Link>,
           },
            {
-            key: '8',
+            key: 'supplier',
             icon: <ShopOutlined />,
             label: <Link href="/admin/supplier">Nhà cung cấp</Link>,
           },
            {
-            key: '9',
+            key: 'warehouse',
             icon: <GoldOutlined />,
             label: <Link href="/admin/warehouse">Kho hàng</Link>,
           },
          ...(currentUser?.role === 'superadmin' ? [{
-            key: '10',
+            key: 'users',
             icon: <UserOutlined />,
             label: <Link href="/admin/users">Tài khoản</Link>,
           }] : []),
           {
-            key: '15',
+            key: 'warranty',
             icon: <SelectOutlined />,
             label: <Link href="/admin/warranty">Bảo hành</Link>,
           },
@@ -97,11 +96,11 @@ export default function SidebarAdmin({ collapsed }: SidebarAdminProps) {
             icon: <UnorderedListOutlined />,
             label: 'Danh mục',
             children: [
-              { key: '11', icon: <PicLeftOutlined />, label: <Link href="/admin/category">Sản phẩm</Link> },
-              { key: '12', icon: <FormatPainterOutlined />, label: <Link href="/admin/color">Màu sắc</Link> },
+              { key: 'category', icon: <PicLeftOutlined />, label: <Link href="/admin/category">Sản phẩm</Link> },
+              { key: 'color', icon: <FormatPainterOutlined />, label: <Link href="/admin/color">Màu sắc</Link> },
               // { key: '13', icon: <ProjectOutlined />, label: <Link href="/admin/project-category">Hạng mục dự án</Link> },
-              { key: '14', icon: <WalletOutlined />, label: <Link href="/admin/prepayment">Lịch sử tạm ứng</Link> },
-              { key: '15', icon: <WalletOutlined />, label: <Link href="/admin/combo">Combo sản phẩm</Link> },
+              // { key: '14', icon: <WalletOutlined />, label: <Link href="/admin/prepayment">Lịch sử tạm ứng</Link> },
+              // { key: '15', icon: <WalletOutlined />, label: <Link href="/admin/combo">Combo sản phẩm</Link> },
             ],
           },
         ]}

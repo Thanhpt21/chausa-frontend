@@ -282,13 +282,13 @@ import ExportFileProjectModal from './ExportFileProjectModal';
           {isExpired ? (
             // ✅ Chỉ hiển thị icon xem báo giá nếu đã hết hạn
             <Tooltip title="Xem file báo giá">
-              <EyeOutlined
+              {/* <EyeOutlined
                 style={{ color: '#1890ff', cursor: 'pointer' }}
                 onClick={() => {
                   setSelectedExportPDF(record);
                   setOpenDetailPDF(true);
                 }}
-              />
+              /> */}
             </Tooltip>
           ) : (
             <>
@@ -335,13 +335,13 @@ import ExportFileProjectModal from './ExportFileProjectModal';
                :
               <>
               <Tooltip title="Xem file báo giá">
-                <EyeOutlined
+                {/* <EyeOutlined
                   style={{ color: '#1890ff', cursor: 'pointer' }}
                   onClick={() => {
                     setSelectedExportPDF(record);
                     setOpenDetailPDF(true);
                   }}
-                />
+                /> */}
               </Tooltip>
               <Tooltip title="Xem chi tiết phiếu Báo giá">
                 <AppstoreAddOutlined

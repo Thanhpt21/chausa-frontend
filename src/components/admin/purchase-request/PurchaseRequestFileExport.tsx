@@ -90,9 +90,7 @@ const PurchaseRequestFileExport = ({
     >
       <div ref={modalContentRef} className="p-5 text-xs">
         <div className="mb-4">
-          <strong>CÔNG TY TNHH GIẢI PHÁP KỸ THUẬT EIT</strong><br />
-          <span>Địa chỉ: 37 Nguyễn Văn Huyên, phường Phú Thọ Hoà, TP.HCM</span><br />
-          <span>Website: www.eitsmart.com.vn</span>
+          <strong>CHÂU SA</strong><br />
         </div>
 
         <div className="text-center mt-5">

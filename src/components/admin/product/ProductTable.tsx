@@ -135,23 +135,6 @@ export default function ProductTable() {
       />
     )
     },
-    {
-  title: 'Tồn kho theo màu',
-  key: 'colorStock',
-  render: (record) => (
-    <div>
-      {record.stockByColor?.length ? (
-        record.stockByColor.map((color: any) => (
-          <div key={color.colorId} style={{ marginBottom: 4 }}>
-            <strong>{color.colorTitle}:</strong> {color.remainingQuantity}
-          </div>
-        ))
-      ) : (
-        <span>Không có dữ liệu</span>
-      )}
-    </div>
-  ),
-},
      {
       title: 'Kho',
       key: 'stock',

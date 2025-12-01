@@ -72,9 +72,7 @@ const ImportFileImport = ({
       <div ref={modalContentRef} className='text-xs'>
         <div className="px-5">
           <div className="text-sm">
-            <div><strong>CÔNG TY TNHH GIẢI PHÁP KỸ THUẬT EIT</strong></div>
-            <div><strong>Địa chỉ:</strong> 37 Nguyễn Văn Huyên, Phú Thọ Hoà, TP.HCM</div>
-            <div><strong>Website:</strong> www.eitsmart.com.vn</div>
+            <div><strong>CHÂU SA</strong></div>
           </div>
         </div>
 

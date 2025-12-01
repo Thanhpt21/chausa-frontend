@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { Button } from 'antd';
 import { useRouter } from 'next/navigation';
-import logo from '../assets/images/logo.png';
+import logo from '../assets/images/cslogo.jpg';
 import bg from '../assets/banner/bg.jpg';
 
 export default function Page() {

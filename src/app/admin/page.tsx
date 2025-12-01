@@ -1,14 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react'; // Import useEffect for hydration fix
-import { Card, Row, Col, DatePicker, Spin } from 'antd'; // Import Spin for loading states
+import { useState, useEffect } from 'react';
+import { Card, Row, Col, DatePicker, Spin, Statistic } from 'antd';
 import { useAllCustomers } from '@/hooks/customer/useAllCustomers';
 import { useAllProducts } from '@/hooks/product/useAllProducts';
 import { useImportStats } from '@/hooks/import/useImportStats';
 import { useExportStats } from '@/hooks/export/useExportStats';
-
-import { useTotalRevenue } from '@/hooks/export/useTotalRevenue'; // import hook tổng doanh thu
-import { useTotalImportValue } from '@/hooks/import/useTotalImportValue'; // import hook tổng chi phí phát sinh
+import { useTotalRevenue } from '@/hooks/export/useTotalRevenue';
+import { useTotalImportValue } from '@/hooks/import/useTotalImportValue';
 import { useTotalPrepaymentSum } from '@/hooks/prepayment/useTotalPrepaymentSum';
 import RevenueChart from '@/components/common/RevenueChart';
 import { ChartData, ChartOptions } from 'chart.js';
@@ -30,6 +29,9 @@ import {
   ArrowUpOutlined,
   ArrowDownOutlined,
   FileTextOutlined,
+  RiseOutlined,
+  FallOutlined,
+  TransactionOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { usePurchaseRequestStats } from '@/hooks/purchase/usePurchaseRequestStats';
@@ -54,13 +56,13 @@ export default function AdminPage() {
   const { data: totalRevenueForTransferData, isLoading: loadingTotalRevenueForTransfer } = useTotalRevenueForTransfer({ startDate, endDate });
   const { data: totalExtraCostData, isLoading: loadingTotalExtraCost } = useTotalExtraCostInternal({ startDate, endDate });
 
-const start = startDate
-  ? dayjs(startDate).format('DD/MM/YYYY')
-  : dayjs().startOf('month').format('DD/MM/YYYY');
+  const start = startDate
+    ? dayjs(startDate).format('DD/MM/YYYY')
+    : dayjs().startOf('month').format('DD/MM/YYYY');
 
-const end = endDate
-  ? dayjs(endDate).format('DD/MM/YYYY')
-  : dayjs().endOf('month').format('DD/MM/YYYY');
+  const end = endDate
+    ? dayjs(endDate).format('DD/MM/YYYY')
+    : dayjs().endOf('month').format('DD/MM/YYYY');
 
   // Hydration fix: State to check if component is mounted on client
   const [mounted, setMounted] = useState(false);
@@ -79,7 +81,7 @@ const end = endDate
     loadingTotalRevenueForTransfer ||
     loadingTotalPrepaymentSum ||
     loadingPurchaseRequestStats ||
-    loadingTotalExtraCost
+    loadingTotalExtraCost;
 
   const handleDateChange = (dates: any, dateStrings: [string, string]) => {
     setStartDate(dateStrings[0]);
@@ -99,14 +101,13 @@ const end = endDate
     return isCurrency ? formatCurrency(value) : (value ?? 0);
   };
 
- const remainingRevenue = totalRevenueData?.totalRevenueExported === 0
-  ? totalRevenueData?.totalRevenueExported
-  : (totalRevenueData?.totalRevenueExported ?? 0) - (totalPrepaymentSumData?.totalAmount ?? 0);
+  const remainingRevenue = totalRevenueData?.totalRevenueExported === 0
+    ? totalRevenueData?.totalRevenueExported
+    : (totalRevenueData?.totalRevenueExported ?? 0) - (totalPrepaymentSumData?.totalAmount ?? 0);
 
+  const totalRevenueAll = (totalRevenueData?.totalRevenue ?? 0) + (totalRevenueData?.totalAdditionalCost ?? 0) - (totalRevenueData?.totalExtraCost ?? 0);
 
-  const  totalRevenueAll = (totalRevenueData?.totalRevenue ?? 0) + (totalRevenueData?.totalAdditionalCost ?? 0) - (totalRevenueData?.totalExtraCost ?? 0);
-
-    const revenueChartData: ChartData<'bar'> = {
+  const revenueChartData: ChartData<'bar'> = {
     labels: ['Tổng doanh thu', 'Chi phí nhập kho', 'Đã nhận', 'Chưa nhận'],
     datasets: [
       {
@@ -141,47 +142,102 @@ const end = endDate
   };
 
   return (
-    <div className="p-8">
+    <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">Trang Quản Trị</h1>
 
       {/* Dòng 1: Chọn khoảng thời gian */}
       <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={24} sm={12} md={12} lg={6}>
-          {mounted ? ( // Render RangePicker only on client
+        <Col xs={24} sm={12} md={8} lg={6}>
+          {mounted ? (
             <RangePicker
               onChange={handleDateChange}
               format="YYYY-MM-DD"
               style={{ width: '100%' }}
+              placeholder={['Từ ngày', 'Đến ngày']}
             />
           ) : (
-            <div style={{ height: 32, backgroundColor: '#f0f0f0', borderRadius: 6 }}></div> // Placeholder for SSR
+            <div style={{ height: 32, backgroundColor: '#f0f0f0', borderRadius: 6 }}></div>
           )}
         </Col>
       </Row>
+
+      {/* TỔNG QUAN DOANH THU & CHI PHÍ */}
       <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={24} sm={24} md={24} lg={24}>
+        <Col xs={24}>
           <Card
             title={
-              <span>
-                <DollarCircleOutlined className="mr-2 text-green-600" />
-                Doanh thu chung từ {start} đến {end}
+              <span className="text-lg font-semibold">
+                <TransactionOutlined className="mr-2 text-blue-600" />
+                Tổng quan doanh thu & chi phí từ {start} đến {end}
               </span>
             }
             bordered={false}
+            className="shadow-md"
           >
-            <p className="text-xl font-semibold text-green-700">
-              {renderValue(
-                (totalRevenueData?.totalRevenue ?? 0) +
-                (totalRevenueForTransferData?.totalRevenue ?? 0) -
-                (totalExtraCostData?.totalExtraCost ?? 0) + (totalRevenueData?.totalAdditionalCost ?? 0) - (totalRevenueData?.totalExtraCost ?? 0)
-              )}
-            </p>
+            <Row gutter={[16, 16]}>
+              {/* Doanh thu chung */}
+              <Col xs={24} sm={12} md={6}>
+                <Statistic
+                  title="Tổng doanh thu"
+                  value={totalRevenueAll}
+                  formatter={(value) => renderValue(value as number)}
+                  prefix={<RiseOutlined className="text-green-600" />}
+                  valueStyle={{ color: '#3f8600' }}
+                />
+              </Col>
+
+              {/* Chi phí nhập kho */}
+              {/* <Col xs={24} sm={12} md={6}>
+                <Statistic
+                  title="Chi phí nhập kho"
+                  value={totalImportValueData?.totalImportValue}
+                  formatter={(value) => renderValue(value as number)}
+                  prefix={<FallOutlined className="text-red-600" />}
+                  valueStyle={{ color: '#cf1322' }}
+                />
+              </Col> */}
+
+              {/* Doanh thu đã nhận */}
+              <Col xs={24} sm={12} md={6}>
+                <Statistic
+                  title="Đã nhận"
+                  value={totalPrepaymentSumData?.totalAmount}
+                  formatter={(value) => renderValue(value as number)}
+                  prefix={<DollarCircleOutlined className="text-orange-600" />}
+                  valueStyle={{ color: '#fa8c16' }}
+                />
+              </Col>
+
+              {/* Chưa nhận */}
+              <Col xs={24} sm={12} md={6}>
+                <Statistic
+                  title="Chưa nhận"
+                  value={remainingRevenue}
+                  formatter={(value) => renderValue(value as number)}
+                  prefix={<FileSyncOutlined className="text-blue-600" />}
+                  valueStyle={{ color: '#1890ff' }}
+                />
+              </Col>
+
+              {/* Chi phí xuất kho */}
+              <Col xs={24} sm={12} md={6}>
+                <Statistic
+                  title="Chi phí xuất kho"
+                  value={totalRevenueForTransferData?.totalRevenue}
+                  formatter={(value) => renderValue(value as number)}
+                  prefix={<ArrowUpOutlined className="text-purple-600" />}
+                  valueStyle={{ color: '#722ed1' }}
+                />
+              </Col>
+            </Row>
           </Card>
         </Col>
       </Row>
+
+      {/* THỐNG KÊ CHI TIẾT DOANH THU */}
       <Row gutter={[16, 16]} className="mb-6">
-        {/* Tổng doanh thu */}
-        <Col xs={24} sm={24} md={12} lg={8}>
+        {/* Doanh thu đơn hàng - COMMENTED FOR FUTURE USE */}
+        {/* <Col xs={24} lg={12}>
           <Card
             title={
               <span>
@@ -190,67 +246,67 @@ const end = endDate
               </span>
             }
             bordered={false}
+            className="shadow-md h-full"
           >
-            <p className="text-lg font-semibold text-purple-600 mb-2">
-              Tổng doanh thu tất cả: {renderValue(totalRevenueData?.totalRevenue)}
-            </p>
-            <p className="text-sm text-blue-600 mb-2">
-              Phí cộng thêm: {renderValue(totalRevenueData?.totalAdditionalCost)}
-            </p>
-            <p className="text-sm text-green-600 mb-4">
-              Phí phát sinh: {renderValue(totalRevenueData?.totalExtraCost)}
-            </p>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                <span className="font-medium">Tổng doanh thu:</span>
+                <span className="text-purple-600 font-semibold">
+                  {renderValue(totalRevenueData?.totalRevenue)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center p-2">
+                <span>Phí cộng thêm:</span>
+                <span className="text-blue-600">{renderValue(totalRevenueData?.totalAdditionalCost)}</span>
+              </div>
+              <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                <span>Phí phát sinh:</span>
+                <span className="text-green-600">{renderValue(totalRevenueData?.totalExtraCost)}</span>
+              </div>
+              
+              <div className="mt-4 pt-3 border-t">
+                <h4 className="font-semibold text-green-700 mb-2">
+                  <FileProtectOutlined className="mr-1" />
+                  Đơn hàng "Hoàn thành"
+                </h4>
+                <p className="text-sm">Doanh thu: {renderValue(totalRevenueData?.totalRevenueCompleted)}</p>
+              </div>
 
-            <h3 className="text-base font-semibold text-green-700 mb-2 mt-4">
-              <FileProtectOutlined className="mr-1" />
-              Đơn hàng "Hoàn thành"
-            </h3>
-            <p className="text-sm">Doanh thu: {renderValue(totalRevenueData?.totalRevenueCompleted)}</p>
-
-            <h3 className="text-base font-semibold text-cyan-700 mb-2 mt-4">
-              <FileSyncOutlined className="mr-1" />
-              Đơn hàng "Đã xuất kho"
-            </h3>
-            <p className="text-sm">Dự kiến sẽ nhận: {renderValue(totalRevenueData?.totalRevenueExported)}</p>
-            <p className="text-sm">Đã nhận thực tế: {renderValue(totalPrepaymentSumData?.totalAmount)}</p>
-            <p className="text-sm">Còn lại chưa nhận: {renderValue(remainingRevenue)}</p>
+              <div className="pt-3 border-t">
+                <h4 className="font-semibold text-cyan-700 mb-2">
+                  <FileSyncOutlined className="mr-1" />
+                  Đơn hàng "Đã xuất kho"
+                </h4>
+                <p className="text-sm">Dự kiến sẽ nhận: {renderValue(totalRevenueData?.totalRevenueExported)}</p>
+                <p className="text-sm">Đã nhận thực tế: {renderValue(totalPrepaymentSumData?.totalAmount)}</p>
+                <p className="text-sm">Còn lại chưa nhận: {renderValue(remainingRevenue)}</p>
+              </div>
+            </div>
           </Card>
-        </Col>
-        <Col xs={24} sm={12} md={12} lg={8}>
+        </Col> */}
+
+        {/* Chi phí phát sinh - COMMENTED FOR FUTURE USE */}
+        {/* <Col xs={24} lg={12}>
           <Card
             title={
               <span>
                 <ShoppingCartOutlined className="mr-2 text-red-600" />
-                 Tổng chi phí phát sinh nhập kho
+                Tổng chi phí phát sinh nhập kho
               </span>
             }
             bordered={false}
+            className="shadow-md h-full"
           >
-            <p className="text-lg font-semibold text-purple-600 mb-2">
-              Tổng chi phí tất cả: {renderValue(totalExtraCostData?.totalExtraCost)}
-            </p>
-          </Card>
-        </Col>
-
-        {/* Chi phí nhập kho */}
-        {/* <Col xs={24} sm={12} md={12} lg={6}>
-          <Card
-            title={
-              <span>
-                <ArrowDownOutlined className="mr-2 text-orange-500" />
-                Tổng chi phí nhập kho
-              </span>
-            }
-            bordered={false}
-          >
-            <p className="text-3xl font-semibold text-gray-600">
-              {renderValue(totalImportValueData?.totalImportValue)}
-            </p>
+            <div className="text-center py-8">
+              <p className="text-2xl font-semibold text-purple-600">
+                {renderValue(totalExtraCostData?.totalExtraCost)}
+              </p>
+            </div>
           </Card>
         </Col> */}
 
-        {/* Doanh thu phiếu xuất */}
-        <Col xs={24} sm={24} md={12} lg={8}>
+        {/* Chi phí xuất kho */}
+        <Col xs={24} lg={12}>
           <Card
             title={
               <span>
@@ -259,112 +315,224 @@ const end = endDate
               </span>
             }
             bordered={false}
+            className="shadow-md h-full"
           >
-            <p className="text-lg font-semibold text-purple-600 mb-2">
-              Tổng chi phí tất cả: {renderValue(totalRevenueForTransferData?.totalRevenue)}
-            </p>
-             <h3 className="text-base font-semibold text-green-700 mb-2 mt-4">
-              <FileProtectOutlined className="mr-1" />
-              "Đã Hoàn thành"
-            </h3>
-            <p className="text-sm">Chi phí: {renderValue(totalRevenueForTransferData?.totalRevenueCompleted)}</p>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                <span className="font-semibold">Tổng chi phí:</span>
+                <span className="text-purple-600 font-semibold text-lg">
+                  {renderValue(totalRevenueForTransferData?.totalRevenue)}
+                </span>
+              </div>
+              
+              <div className="grid grid-cols-1 gap-3">
+                <div className="p-2 bg-green-50 rounded">
+                  <h4 className="font-semibold text-green-700 mb-1">
+                    <FileProtectOutlined className="mr-1" />
+                    "Đã Hoàn thành"
+                  </h4>
+                  <p className="text-sm">Chi phí: {renderValue(totalRevenueForTransferData?.totalRevenueCompleted)}</p>
+                </div>
 
-            <h3 className="text-base font-semibold text-cyan-700 mb-2 mt-4">
-              <FileSyncOutlined className="mr-1" />
-              "Đã xuất kho"
-            </h3>
-            <p className="text-sm">Chi phí: {renderValue(totalRevenueForTransferData?.totalRevenueExported)}</p>
-
-           
+                <div className="p-2 bg-cyan-50 rounded">
+                  <h4 className="font-semibold text-cyan-700 mb-1">
+                    <FileSyncOutlined className="mr-1" />
+                    "Đã xuất kho"
+                  </h4>
+                  <p className="text-sm">Chi phí: {renderValue(totalRevenueForTransferData?.totalRevenueExported)}</p>
+                </div>
+              </div>
+            </div>
           </Card>
         </Col>
+
+        {/* Biểu đồ tổng quan - COMMENTED FOR FUTURE USE */}
+        {/* <Col xs={24} md={12}>
+          <Card title="Biểu đồ tổng quan" bordered={false} className="shadow-md">
+            {mounted && !isLoading ? (
+              <RevenueChart data={revenueChartData} options={revenueChartOptions} />
+            ) : (
+              <div className="flex justify-center items-center h-64">
+                <Spin />
+              </div>
+            )}
+          </Card>
+        </Col> */}
       </Row>
 
       {/* THỐNG KÊ PHIẾU VÀ ĐỐI TƯỢNG */}
       <Row gutter={[16, 16]} className="mb-6">
-      
-
-        {/* Phiếu nhập */}
-        <Col xs={24} sm={12} md={12} lg={6}>
-          <Card title={<span><InboxOutlined className="mr-2" />Phiếu nhập kho</span>} bordered={false}>
+        {/* Phiếu nhập kho */}
+        <Col xs={24} sm={12} md={8} lg={6}>
+          <Card 
+            title={
+              <span className="flex items-center">
+                <InboxOutlined className="mr-2 text-orange-500" />
+                Phiếu nhập kho
+              </span>
+            } 
+            bordered={false}
+            className="shadow-md text-center"
+          >
             {mounted && !isLoading ? (
               <>
-                <p className="text-3xl font-semibold text-orange-500">{importStats?.total ?? 0}</p>
-                <p className="text-sm">Chờ xử lý: {importStats?.pending ?? 0}</p>
-                <p className="text-sm">Đã nhập kho: {importStats?.completed ?? 0}</p>
-                <p className="text-sm">Đã huỷ: {importStats?.cancelled ?? 0}</p>
+                <p className="text-3xl font-bold text-orange-500 mb-3">{importStats?.total ?? 0}</p>
+                <div className="space-y-1 text-left">
+                  <p className="text-sm flex justify-between">
+                    <span>Chờ xử lý:</span>
+                    <span className="font-medium">{importStats?.pending ?? 0}</span>
+                  </p>
+                  <p className="text-sm flex justify-between">
+                    <span>Đã nhập kho:</span>
+                    <span className="font-medium text-green-600">{importStats?.completed ?? 0}</span>
+                  </p>
+                  <p className="text-sm flex justify-between">
+                    <span>Đã huỷ:</span>
+                    <span className="font-medium text-red-600">{importStats?.cancelled ?? 0}</span>
+                  </p>
+                </div>
               </>
             ) : (
-              <Spin size="small" />
+              <div className="py-8">
+                <Spin size="small" />
+              </div>
             )}
           </Card>
         </Col>
 
-        <Col xs={24} sm={12} md={12} lg={6}>
-          <Card title={<span><FileDoneOutlined className="mr-2" />Phiếu đề nghị mua hàng</span>} bordered={false}>
+        {/* Phiếu đề nghị mua hàng - COMMENTED FOR FUTURE USE */}
+        {/* <Col xs={24} sm={12} md={8} lg={6}>
+          <Card 
+            title={
+              <span className="flex items-center">
+                <FileDoneOutlined className="mr-2 text-blue-600" />
+                Phiếu đề nghị mua hàng
+              </span>
+            } 
+            bordered={false}
+            className="shadow-md text-center"
+          >
             {mounted && !isLoading ? (
               <>
-                <p className="text-3xl font-semibold text-blue-600">{purchaseRequestStats?.total ?? 0}</p>
-                <p className="text-sm">Chờ xử lý: {purchaseRequestStats?.pending ?? 0}</p>
-                <p className="text-sm">Hoàn thành: {purchaseRequestStats?.completed ?? 0}</p>
-                <p className="text-sm">Đã huỷ: {purchaseRequestStats?.cancelled ?? 0}</p>
+                <p className="text-3xl font-bold text-blue-600 mb-3">{purchaseRequestStats?.total ?? 0}</p>
+                <div className="space-y-1 text-left">
+                  <p className="text-sm flex justify-between">
+                    <span>Chờ xử lý:</span>
+                    <span className="font-medium">{purchaseRequestStats?.pending ?? 0}</span>
+                  </p>
+                  <p className="text-sm flex justify-between">
+                    <span>Hoàn thành:</span>
+                    <span className="font-medium text-green-600">{purchaseRequestStats?.completed ?? 0}</span>
+                  </p>
+                  <p className="text-sm flex justify-between">
+                    <span>Đã huỷ:</span>
+                    <span className="font-medium text-red-600">{purchaseRequestStats?.cancelled ?? 0}</span>
+                  </p>
+                </div>
               </>
             ) : (
-              <Spin size="small" />
+              <div className="py-8">
+                <Spin size="small" />
+              </div>
             )}
           </Card>
-        </Col>
+        </Col> */}
 
-        {/* Phiếu xuất đơn hàng */}
-        <Col xs={24} sm={12} md={12} lg={6}>
-          <Card title={<span><FileDoneOutlined className="mr-2" />Phiếu xuất đơn hàng</span>} bordered={false}>
+        {/* Phiếu xuất đơn hàng - COMMENTED FOR FUTURE USE */}
+        {/* <Col xs={24} sm={12} md={8} lg={6}>
+          <Card 
+            title={
+              <span className="flex items-center">
+                <FileDoneOutlined className="mr-2 text-red-500" />
+                Phiếu xuất đơn hàng
+              </span>
+            } 
+            bordered={false}
+            className="shadow-md text-center"
+          >
             {mounted && !isLoading ? (
               <>
-                <p className="text-3xl font-semibold text-red-500">{exportStats?.total ?? 0}</p>
-                <p className="text-sm">Chờ xử lý: {exportStats?.pending ?? 0}</p>
-                <p className="text-sm">Đã xuất kho: {exportStats?.exporting ?? 0}</p>
-                <p className="text-sm">Đã huỷ: {exportStats?.cancelled ?? 0}</p>
-                <p className="text-sm">Từ chối: {exportStats?.rejected ?? 0}</p>
-                <p className="text-sm">Hoàn thành: {exportStats?.completed ?? 0}</p>
+                <p className="text-3xl font-bold text-red-500 mb-3">{exportStats?.total ?? 0}</p>
+                <div className="space-y-1 text-left text-xs">
+                  <p className="flex justify-between">
+                    <span>Chờ xử lý:</span>
+                    <span className="font-medium">{exportStats?.pending ?? 0}</span>
+                  </p>
+                  <p className="flex justify-between">
+                    <span>Đã xuất kho:</span>
+                    <span className="font-medium text-orange-600">{exportStats?.exporting ?? 0}</span>
+                  </p>
+                  <p className="flex justify-between">
+                    <span>Đã huỷ:</span>
+                    <span className="font-medium text-red-600">{exportStats?.cancelled ?? 0}</span>
+                  </p>
+                  <p className="flex justify-between">
+                    <span>Từ chối:</span>
+                    <span className="font-medium text-purple-600">{exportStats?.rejected ?? 0}</span>
+                  </p>
+                  <p className="flex justify-between">
+                    <span>Hoàn thành:</span>
+                    <span className="font-medium text-green-600">{exportStats?.completed ?? 0}</span>
+                  </p>
+                </div>
               </>
             ) : (
-              <Spin size="small" />
+              <div className="py-8">
+                <Spin size="small" />
+              </div>
             )}
           </Card>
-        </Col>
+        </Col> */}
 
         {/* Phiếu xuất kho */}
-        <Col xs={24} sm={12} md={12} lg={6}>
-          <Card title={<span><FileTextOutlined className="mr-2" />Phiếu xuất kho</span>} bordered={false}>
+        <Col xs={24} sm={12} md={8} lg={6}>
+          <Card 
+            title={
+              <span className="flex items-center">
+                <FileTextOutlined className="mr-2 text-red-500" />
+                Phiếu xuất kho
+              </span>
+            } 
+            bordered={false}
+            className="shadow-md text-center"
+          >
             {mounted && !isLoading ? (
               <>
-                <p className="text-3xl font-semibold text-red-500">{transferStats?.total ?? 0}</p>
-                <p className="text-sm">Chờ xử lý: {transferStats?.pending ?? 0}</p>
-                <p className="text-sm">Đã xuất kho: {transferStats?.exported ?? 0}</p>
-                <p className="text-sm">Đã huỷ: {transferStats?.cancelled ?? 0}</p>
-                <p className="text-sm">Hoàn thành: {transferStats?.completed ?? 0}</p>
+                <p className="text-3xl font-bold text-red-500 mb-3">{transferStats?.total ?? 0}</p>
+                <div className="space-y-1 text-left">
+                  <p className="text-sm flex justify-between">
+                    <span>Chờ xử lý:</span>
+                    <span className="font-medium">{transferStats?.pending ?? 0}</span>
+                  </p>
+                  <p className="text-sm flex justify-between">
+                    <span>Đã xuất kho:</span>
+                    <span className="font-medium text-orange-600">{transferStats?.exported ?? 0}</span>
+                  </p>
+                  <p className="text-sm flex justify-between">
+                    <span>Đã huỷ:</span>
+                    <span className="font-medium text-red-600">{transferStats?.cancelled ?? 0}</span>
+                  </p>
+                  <p className="text-sm flex justify-between">
+                    <span>Hoàn thành:</span>
+                    <span className="font-medium text-green-600">{transferStats?.completed ?? 0}</span>
+                  </p>
+                </div>
               </>
             ) : (
-              <Spin size="small" />
+              <div className="py-8">
+                <Spin size="small" />
+              </div>
             )}
           </Card>
         </Col>
 
-
-      </Row>
-
-      <Row gutter={[16, 16]} className="mt-6">
-          <Col xs={24} md={12}>
-          <Card title="Biểu đồ tổng quan" bordered={false}>
-            {mounted && !isLoading ? (
-              <RevenueChart data={revenueChartData} options={revenueChartOptions} />
-            ) : (
-              <Spin />
-            )}
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={12} lg={6}>
-          <Card title="Khách hàng & Sản phẩm" bordered={false}>
+        {/* Khách hàng & Sản phẩm */}
+        <Col xs={24} sm={12} md={8} lg={6}>
+          <Card 
+            title="Khách hàng & Sản phẩm" 
+            bordered={false}
+            className="shadow-md"
+          >
             {mounted && !isLoading ? (
               <PieChartComponent
                 title="Tỉ lệ Khách hàng & Sản phẩm"
@@ -373,35 +541,39 @@ const end = endDate
                 colors={['#1890ff', '#52c41a']}
               />
             ) : (
-              <Spin size="small" />
+              <div className="flex justify-center items-center h-32">
+                <Spin size="small" />
+              </div>
             )}
           </Card>
         </Col>
       </Row>
 
+      {/* BIỂU ĐỒ THỐNG KÊ */}
       <Row gutter={[16, 16]} className="mb-6">
         <Col xs={24} md={12}>
-          <Card title="Biểu đồ nhập kho" bordered={false}>
+          <Card title="Biểu đồ nhập kho" bordered={false} className="shadow-md">
             {mounted && !isLoading && importStats ? (
               <ImportStatusChart stats={importStats} />
             ) : (
-              <Spin />
+              <div className="flex justify-center items-center h-64">
+                <Spin />
+              </div>
             )}
           </Card>
         </Col>
         <Col xs={24} md={12}>
-          <Card title="Biểu đồ xuất kho" bordered={false}>
+          <Card title="Biểu đồ xuất kho" bordered={false} className="shadow-md">
             {mounted && !isLoading && exportStats ? (
               <ExportStatusChart stats={exportStats} />
             ) : (
-              <Spin />
+              <div className="flex justify-center items-center h-64">
+                <Spin />
+              </div>
             )}
           </Card>
         </Col>
       </Row>
-
-
-
     </div>
   );
 }
