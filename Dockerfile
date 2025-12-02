@@ -1,52 +1,47 @@
-# Giai đoạn Build (builder stage) - Tạo bản build sản phẩm Next.js
-FROM node:22 AS builder
-
+# Stage 1: Build
+FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Copy các file cấu hình dependency từ thư mục frontend
-COPY package.json package-lock.json ./ 
+# Copy env
+COPY .env.prod ./.env.production
 
-# Cài đặt tất cả các dependencies (bao gồm dev dependencies)
-RUN npm install
+# Copy package files
+COPY package.json package-lock.json ./
 
-# Copy toàn bộ mã nguồn của dự án Next.js vào thư mục /app trong container
-COPY . .
+# Install dependencies (package-lock.json đã được fix local rồi)
+RUN npm ci --legacy-peer-deps
 
-# Sao chép tệp .env từ thư mục frontend vào /app của container (thêm bước này)
-COPY .env ./.env
+# Copy config files
+COPY tsconfig.json ./
+COPY tailwind.config.js ./
+COPY postcss.config.js ./
+COPY next.config.js ./
 
-# Chạy lệnh build của Next.js (tạo ra thư mục .next)
+# Copy source code
+COPY src ./src
+COPY public ./public
+
+# Build Next.js app
 RUN npm run build
 
-# -----------------------------------------------------------
-# Giai đoạn Production (runner stage) - Tạo image nhẹ để chạy ứng dụng Next.js
-# -----------------------------------------------------------
-FROM node:22 AS runner
-
+# Stage 2: Run
+FROM node:20-alpine AS runner
 WORKDIR /app
 
-# Copy các file package.json và package-lock.json cần thiết cho runtime từ giai đoạn builder
-COPY --from=builder /app/package.json /app/package-lock.json ./
-
-# Cài đặt chỉ các production dependencies
-RUN npm install --omit=dev
-
-# Copy thư mục .next/ (chứa bản build) từ giai đoạn builder
-COPY --from=builder /app/.next ./.next
-
-# Copy thư mục public (nếu có)
-COPY --from=builder /app/public ./public
-
-# Copy tệp .env từ giai đoạn builder vào container
-COPY --from=builder /app/.env ./.env
-
-# Cấu hình các biến môi trường để chạy ứng dụng Next.js
 ENV NODE_ENV=production
-ENV NEXT_PUBLIC_PAGE_SIZE=12
-ENV JWT_SECRET=jwtsecret12345
+ENV PORT=3000
 
-# Mở cổng mà ứng dụng Next.js của bạn sẽ lắng nghe
+# Create user
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
+
+# Copy built files
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+USER nextjs
+
 EXPOSE 3000
 
-# Lệnh để chạy ứng dụng Next.js khi container khởi động
-CMD ["npm", "start"]
+CMD ["node", "server.js"]

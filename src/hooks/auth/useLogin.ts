@@ -20,18 +20,26 @@ interface LoginResponse {
 }
 
 import { useRouter } from 'next/navigation'
+import { api } from '@/lib/axios'
 
-export const useLogin = (): UseMutationResult<LoginResponse, Error, LoginBody> => {
+// hooks/auth/useLogin.ts
+export const useLogin = () => {
+  const queryClient = useQueryClient();
+  const router = useRouter();
 
-  const queryClient = useQueryClient()
-
-  return useMutation<LoginResponse, Error, LoginBody>({
-    mutationFn: login,
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['current-user'] });
+  return useMutation({
+    mutationFn: async (credentials: { email: string; password: string }) => {
+      const response = await api.post('/auth/login', credentials);
+      return response.data;
     },
-    onError: (error) => {
-      console.error("Login failed:", error.message);
-    }
-  })
-}
+    onSuccess: (data) => {
+      // QUAN TRỌNG: Lưu token từ response
+      if (data.access_token) {
+        localStorage.setItem('accessToken', data.access_token);
+      }
+      
+      queryClient.invalidateQueries({ queryKey: ['current-user'] });
+      router.push('/admin');
+    },
+  });
+};

@@ -1,7 +1,13 @@
 // lib/axios.ts
-import axios, { AxiosRequestConfig } from 'axios'
+import axios from 'axios'
 
-export const api = axios.create({
+const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
-  withCredentials: true, 
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  withCredentials: true, // <-- THÊM DÒNG NÀY
 })
+
+// XÓA interceptor thêm token (vì dùng cookies)
+export { api }
