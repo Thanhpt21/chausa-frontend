@@ -5,10 +5,10 @@ export interface CurrentUser {
   name: string;
   email: string;
   role: string;
-  phone: string | null;
+  phoneNumber: string | null;
   gender: string | null;
   type_account: string;
-  avatar: string | null;
+  profilePicture: string | null;
   isActive: boolean;
 }
 
