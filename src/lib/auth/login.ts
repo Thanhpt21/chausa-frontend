@@ -4,8 +4,22 @@ export interface LoginBody {
   password: string
 }
 
+export interface LoginResponse {
+  success: boolean
+  message: string
+  access_token: string
+  user: {
+    id: number
+    name: string
+    email: string
+    phoneNumber: string | null
+    gender: string | null
+    type_account: string
+    isActive: boolean
+  }
+}
 
-export const login = async (body: LoginBody) => {
+export const login = async (body: LoginBody): Promise<LoginResponse> => {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
     method: 'POST',
     headers: {
@@ -19,6 +33,14 @@ export const login = async (body: LoginBody) => {
     throw new Error('Đăng nhập thất bại');
   }
 
-  return res.json();
+  const data = await res.json();
+  
+  // Lưu token vào localStorage làm backup
+  if (data.access_token) {
+    localStorage.setItem('accessToken', data.access_token);
+  }
+  
+  return data;
 };
+
 

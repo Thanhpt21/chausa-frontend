@@ -14,17 +14,32 @@ export interface CurrentUser {
 
 export const getCurrentUser = async (): Promise<CurrentUser> => {
   try {
+    // Lấy token từ localStorage hoặc cookie
+    const token = typeof window !== 'undefined' 
+      ? localStorage.getItem('accessToken') 
+      : null;
    
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+    };
+    
+    // Nếu có token, thêm vào header Authorization
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/current`, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       credentials: 'include', // Đảm bảo cookie xác thực được gửi đi
       cache: 'no-store',
     });
 
     if (response.status === 401) {
+      // Xóa token hết hạn
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('accessToken');
+      }
       throw new Error('Unauthorized: No active user session.');
     }
 

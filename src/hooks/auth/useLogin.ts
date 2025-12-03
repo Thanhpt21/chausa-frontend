@@ -14,7 +14,7 @@ interface LoginResponse {
     id: number
     name: string
     email: string
-    phone: string | null
+    phoneNumber: string | null
     gender: string | null
     type_account: string
     isActive: boolean
