@@ -21,15 +21,7 @@ export default function LoginPage() {
   const [form] = Form.useForm<LoginFormValues>();
 
   const onSubmit = (values: LoginFormValues) => {
-    loginMutation.mutate(values, {
-      onSuccess: (data) => {
-        message.success('Đăng nhập thành công!');
-      },
-      onError: (error) => {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        message.error(errorMessage || 'Đăng nhập thất bại!');
-      },
-    });
+    loginMutation.mutate(values);
   };
 
   const handleGoogleLogin = () => {

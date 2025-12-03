@@ -9,10 +9,10 @@ export interface CurrentUser {
   name: string;
   email: string;
   role: string;
-  phoneNumber: string | null;
+  phone: string | null;
   gender: string | null;
   type_account: string;
-  profilePicture: string | null
+  avatar: string | null;
   isActive: boolean;
 }
 
