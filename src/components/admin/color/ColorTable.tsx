@@ -47,24 +47,7 @@ export default function ColorTable() {
       dataIndex: 'title',
       key: 'title',
     },
-   {
-      title: 'Mã SKU',
-      dataIndex: 'sku',
-      key: 'sku',
-      render: (sku: string, record: Color) => (
-        <div className="flex items-center gap-2">
-          {/* 🔥 Hình tròn màu sắc */}
-          <div
-            className="w-6 h-6 rounded-full border border-gray-300"
-            style={{
-              backgroundColor: sku.startsWith('#') ? sku : `#${sku}`,
-            }}
-            title={sku.startsWith('#') ? sku : `#${sku}`}
-          />
-          <span>{sku}</span>
-        </div>
-      ),
-    },
+  
     {
       title: 'Ngày tạo',
       dataIndex: 'createdAt',

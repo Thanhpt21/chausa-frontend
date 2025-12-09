@@ -123,18 +123,7 @@ export default function ProductTable() {
       align: 'center',
       render: (record) => <span>{record.category?.title || '—'}</span>,
     },
-     {
-        title: 'Mô tả',
-        dataIndex: 'description',
-        key: 'description',
-        render: (desc: string) => (
-      <div
-        dangerouslySetInnerHTML={{
-          __html: `<div style="margin: 0;"><style>p { margin: 0; }</style>${desc || ''}</div>`,
-        }}
-      />
-    )
-    },
+    
      {
       title: 'Kho',
       key: 'stock',

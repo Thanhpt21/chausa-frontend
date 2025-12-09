@@ -55,12 +55,12 @@ export const ColorCreateModal = ({ open, onClose, refetch }: ColorCreateModalPro
           <Input />
         </Form.Item>
 
-        <Form.Item
+        {/* <Form.Item
           label="Mã màu"
           name="sku"
         >
           <Input type="color" style={{ width: 80, height: 40, padding: 0, border: 'none' }} />
-        </Form.Item>
+        </Form.Item> */}
 
         <Form.Item>
           <Button type="primary" htmlType="submit" loading={isPending} block>

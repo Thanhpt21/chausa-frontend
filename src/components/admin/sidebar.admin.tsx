@@ -1,7 +1,39 @@
 'use client';
 
 import { Image, Layout, Menu } from 'antd';
-import { AppleOutlined, AppstoreOutlined, AuditOutlined, BgColorsOutlined, BranchesOutlined, DashboardOutlined, DropboxOutlined, FileProtectOutlined, FormatPainterOutlined, GiftOutlined, GoldOutlined, HomeOutlined, MessageOutlined, PicLeftOutlined, PicRightOutlined, ProductOutlined, ProjectOutlined, ScissorOutlined, SelectOutlined, SettingOutlined, ShopOutlined, ShoppingCartOutlined, SkinOutlined, SolutionOutlined, TruckOutlined, UnorderedListOutlined, UsergroupAddOutlined, UserOutlined, WalletOutlined } from '@ant-design/icons';
+import { 
+  AppleOutlined, 
+  AppstoreOutlined, 
+  AuditOutlined, 
+  BgColorsOutlined, 
+  BranchesOutlined, 
+  DashboardOutlined, 
+  DropboxOutlined, 
+  FileProtectOutlined, 
+  FormatPainterOutlined, 
+  GiftOutlined, 
+  GoldOutlined, 
+  HomeOutlined, 
+  MessageOutlined, 
+  PicLeftOutlined, 
+  PicRightOutlined, 
+  ProductOutlined, 
+  ProjectOutlined, 
+  ScissorOutlined, 
+  SelectOutlined, 
+  SettingOutlined, 
+  ShopOutlined, 
+  ShoppingCartOutlined, 
+  SkinOutlined, 
+  SolutionOutlined, 
+  TruckOutlined, 
+  UnorderedListOutlined, 
+  UsergroupAddOutlined, 
+  UserOutlined, 
+  WalletOutlined,
+  TeamOutlined,  // Thêm icon cho Employee
+  DollarOutlined // Thêm icon cho Salary
+} from '@ant-design/icons';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import logocs from '../../assets/images/cslogo.jpg';
@@ -80,6 +112,19 @@ export default function SidebarAdmin({ collapsed }: SidebarAdminProps) {
             icon: <GoldOutlined />,
             label: <Link href="/admin/warehouse">Kho hàng</Link>,
           },
+          
+          // 🆕 THÊM MENU NHÂN VIÊN VÀ LƯƠNG
+          {
+            key: 'employee',
+            icon: <TeamOutlined />,
+            label: <Link href="/admin/employees">Nhân viên</Link>,
+          },
+          {
+            key: 'salary',
+            icon: <DollarOutlined />,
+            label: <Link href="/admin/salaries">Quản lý lương</Link>,
+          },
+          
          ...(currentUser?.role === 'superadmin' ? [{
             key: 'users',
             icon: <UserOutlined />,

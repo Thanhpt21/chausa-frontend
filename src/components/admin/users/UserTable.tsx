@@ -137,7 +137,7 @@ export default function UserTable() {
     <div>
       <div className="flex items-center justify-between mb-4">
         {/* Nhóm trái: Input và nút Tìm kiếm */}
-        <div className="flex items-center gap-2">
+        <div className="flex gap-2">
           <Input
             placeholder="Tìm kiếm theo tên hoặc email..."
             value={inputValue}
@@ -152,10 +152,10 @@ export default function UserTable() {
         </div>
 
         {/* Nhóm phải: Nút Tạo mới */}
-        {/* <Button type="primary" onClick={() => setOpenCreate(true)}>
+      
+        <div>  <Button type="primary" onClick={() => setOpenCreate(true)}>
           Tạo mới
-        </Button> */}
-        <div></div>
+        </Button></div>
       </div>
 
 

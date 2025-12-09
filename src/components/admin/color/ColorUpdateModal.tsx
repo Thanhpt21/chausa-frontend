@@ -25,7 +25,7 @@ export const ColorUpdateModal = ({ open, onClose, color, refetch }: ColorUpdateM
     if (color && open) {
       form.setFieldsValue({
         title: color.title,
-        sku: color.sku, // Sử dụng sku thay vì code
+        sku: null,
       })
     } else {
       form.resetFields()
@@ -62,13 +62,13 @@ export const ColorUpdateModal = ({ open, onClose, color, refetch }: ColorUpdateM
           <Input />
         </Form.Item>
 
-        <Form.Item
+        {/* <Form.Item
           label="Mã màu (sku)"
           name="sku"  // Đổi name thành "sku"
           rules={[{ required: true, message: 'Vui lòng chọn mã màu' }]}
         >
           <Input type="color" style={{ width: 80, height: 40, padding: 0, border: 'none' }} />
-        </Form.Item>
+        </Form.Item> */}
 
         <Form.Item>
           <Button type="primary" htmlType="submit" loading={isPending} block>
