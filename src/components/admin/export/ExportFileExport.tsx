@@ -111,7 +111,7 @@ const ExportFileExport = ({
             </div>
           </div>
           <div className="px-5 mt-5 flex items-center justify-center">
-              <div className='text-base'><strong>PHIẾU XUẤT KHO / GIAO HÀNG</strong></div>
+              <div className='text-base'><strong>MÃ ĐƠN HÀNG</strong></div>
           </div>
            <div className="px-5 flex items-center justify-center">
                <i>{formattedDate}</i>

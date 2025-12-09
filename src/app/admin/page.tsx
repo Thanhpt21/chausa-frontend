@@ -179,7 +179,7 @@ export default function AdminPage() {
               <Col xs={24} sm={12} md={6}>
                 <Statistic
                   title="Tổng doanh thu"
-                  value={totalRevenueAll}
+                   value={totalRevenueForTransferData?.totalRevenue}
                   formatter={(value) => renderValue(value as number)}
                   prefix={<RiseOutlined className="text-green-600" />}
                   valueStyle={{ color: '#3f8600' }}
@@ -198,7 +198,7 @@ export default function AdminPage() {
               </Col> */}
 
               {/* Doanh thu đã nhận */}
-              <Col xs={24} sm={12} md={6}>
+              {/* <Col xs={24} sm={12} md={6}>
                 <Statistic
                   title="Đã nhận"
                   value={totalPrepaymentSumData?.totalAmount}
@@ -206,10 +206,10 @@ export default function AdminPage() {
                   prefix={<DollarCircleOutlined className="text-orange-600" />}
                   valueStyle={{ color: '#fa8c16' }}
                 />
-              </Col>
+              </Col> */}
 
               {/* Chưa nhận */}
-              <Col xs={24} sm={12} md={6}>
+              {/* <Col xs={24} sm={12} md={6}>
                 <Statistic
                   title="Chưa nhận"
                   value={remainingRevenue}
@@ -217,10 +217,10 @@ export default function AdminPage() {
                   prefix={<FileSyncOutlined className="text-blue-600" />}
                   valueStyle={{ color: '#1890ff' }}
                 />
-              </Col>
+              </Col> */}
 
               {/* Chi phí xuất kho */}
-              <Col xs={24} sm={12} md={6}>
+              {/* <Col xs={24} sm={12} md={6}>
                 <Statistic
                   title="Chi phí xuất kho"
                   value={totalRevenueForTransferData?.totalRevenue}
@@ -228,7 +228,7 @@ export default function AdminPage() {
                   prefix={<ArrowUpOutlined className="text-purple-600" />}
                   valueStyle={{ color: '#722ed1' }}
                 />
-              </Col>
+              </Col> */}
             </Row>
           </Card>
         </Col>
@@ -306,7 +306,7 @@ export default function AdminPage() {
         </Col> */}
 
         {/* Chi phí xuất kho */}
-        <Col xs={24} lg={12}>
+        {/* <Col xs={24} lg={12}>
           <Card
             title={
               <span>
@@ -344,7 +344,7 @@ export default function AdminPage() {
               </div>
             </div>
           </Card>
-        </Col>
+        </Col> */}
 
         {/* Biểu đồ tổng quan - COMMENTED FOR FUTURE USE */}
         {/* <Col xs={24} md={12}>
@@ -363,7 +363,7 @@ export default function AdminPage() {
       {/* THỐNG KÊ PHIẾU VÀ ĐỐI TƯỢNG */}
       <Row gutter={[16, 16]} className="mb-6">
         {/* Phiếu nhập kho */}
-        <Col xs={24} sm={12} md={8} lg={6}>
+        {/* <Col xs={24} sm={12} md={8} lg={6}>
           <Card 
             title={
               <span className="flex items-center">
@@ -398,7 +398,7 @@ export default function AdminPage() {
               </div>
             )}
           </Card>
-        </Col>
+        </Col> */}
 
         {/* Phiếu đề nghị mua hàng - COMMENTED FOR FUTURE USE */}
         {/* <Col xs={24} sm={12} md={8} lg={6}>
@@ -484,13 +484,12 @@ export default function AdminPage() {
           </Card>
         </Col> */}
 
-        {/* Phiếu xuất kho */}
         <Col xs={24} sm={12} md={8} lg={6}>
           <Card 
             title={
               <span className="flex items-center">
                 <FileTextOutlined className="mr-2 text-red-500" />
-                Phiếu xuất kho
+                Mã đơn hàng
               </span>
             } 
             bordered={false}
@@ -551,7 +550,7 @@ export default function AdminPage() {
 
       {/* BIỂU ĐỒ THỐNG KÊ */}
       <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={24} md={12}>
+        {/* <Col xs={24} md={12}>
           <Card title="Biểu đồ nhập kho" bordered={false} className="shadow-md">
             {mounted && !isLoading && importStats ? (
               <ImportStatusChart stats={importStats} />
@@ -561,7 +560,7 @@ export default function AdminPage() {
               </div>
             )}
           </Card>
-        </Col>
+        </Col> */}
         <Col xs={24} md={12}>
           <Card title="Biểu đồ xuất kho" bordered={false} className="shadow-md">
             {mounted && !isLoading && exportStats ? (

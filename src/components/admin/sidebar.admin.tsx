@@ -79,7 +79,7 @@ export default function SidebarAdmin({ collapsed }: SidebarAdminProps) {
           {
             key: 'transfer',
             icon: <DropboxOutlined />,
-            label: <Link href="/admin/transfer">Phiếu xuất kho</Link>,
+            label: <Link href="/admin/transfer">Mã đơn hàng</Link>,
           },
          
           {
@@ -92,11 +92,11 @@ export default function SidebarAdmin({ collapsed }: SidebarAdminProps) {
           //   icon: <ShoppingCartOutlined />,
           //   label: <Link href="/admin/purchaseRequest">Phiếu mua hàng</Link>,
           // },
-          {
-            key: 'importReceipt',
-            icon: <AuditOutlined />,
-            label: <Link href="/admin/importReceipt">Phiếu nhập kho</Link>,
-          },
+          // {
+          //   key: 'importReceipt',
+          //   icon: <AuditOutlined />,
+          //   label: <Link href="/admin/importReceipt">Phiếu nhập kho</Link>,
+          // },
           {
             key: 'customer',
             icon: <UsergroupAddOutlined />,

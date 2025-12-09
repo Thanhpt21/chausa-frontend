@@ -231,7 +231,7 @@ export const ProductCreateModal = ({
                     </Col>
                 </Row>
                 
-                <Form.Item label="Chọn màu" name="colors"  rules={[{ required: true, message: 'Vui lòng chọn màu sắc' }]}>
+                {/* <Form.Item label="Chọn màu" name="colors"  rules={[{ required: true, message: 'Vui lòng chọn màu sắc' }]}>
                     <Checkbox.Group
                         value={selectedColors.map(color => color.id)}  // Lấy chỉ id từ selectedColors để hiển thị trạng thái checkbox
                         onChange={(checkedValues) => {
@@ -259,7 +259,7 @@ export const ProductCreateModal = ({
                             )}
                         </Row>
                     </Checkbox.Group>
-                </Form.Item>    
+                </Form.Item>     */}
                   <Form.Item 
                         label="Đơn vị tính" 
                         name="unit" 
@@ -267,7 +267,7 @@ export const ProductCreateModal = ({
                         >
                         <Input 
                             placeholder="Nhập đơn vị tính" 
-                            defaultValue="cái" // 👈 Tự động điền mặc định
+                          
                         />
                         </Form.Item>          
                 <Row gutter={16}>

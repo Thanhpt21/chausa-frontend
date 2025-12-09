@@ -173,7 +173,15 @@ export const TransferUpdateModal = ({
           <Input.TextArea rows={2} />
         </Form.Item>
 
-        <Divider>Thông tin xuất kho hàng</Divider>
+        <Divider>Thông tin mã đơn hàng</Divider>
+
+         <Form.Item
+            label="Mã đơn hàng"
+            name="note"
+            rules={[{ required: true, message: 'Vui lòng nhập mã đơn hàng' }]}
+          >
+            <Input placeholder="Nhập mã đơn hàng" />
+          </Form.Item>
 
       <Row gutter={16}>
         <Col span={12}>
@@ -200,9 +208,7 @@ export const TransferUpdateModal = ({
         </Col>
       </Row>
 
-        <Form.Item name="note" label="Ghi chú">
-          <Input.TextArea rows={3} placeholder="Nhập ghi chú nếu có" />
-        </Form.Item>
+       
 
         <Form.Item>
           <Button type="primary" htmlType="submit" block loading={isPending}>

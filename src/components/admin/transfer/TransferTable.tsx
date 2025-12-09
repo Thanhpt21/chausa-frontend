@@ -171,22 +171,18 @@ export default function TransferTable() {
       width: 60,
       render: (_text, _record, index) => (page - 1) * 10 + index + 1,
     },
+     {
+      title: 'Mã đơn hàng',
+      dataIndex: 'note',
+      key: 'note',
+    },
     {
       title: 'Khách hàng',
       dataIndex: 'customerId',
       key: 'customerId',
       render: (customerId) => customerMap[customerId] || '-',
     },
-    {
-      title: 'Trạng thái',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status) => (
-         <Tag color={statusColors[status] || 'default'}>
-          {statusLabels[status] || status}
-        </Tag>
-      ),
-    },
+    
     {
       title: 'Người tạo',
       dataIndex: ['user', 'name'],
@@ -204,16 +200,22 @@ export default function TransferTable() {
       key: 'total_amount',
       render: (amount) => formatVND(amount),
     },
-     {
-      title: 'Ghi chú',
-      dataIndex: 'note',
-      key: 'note',
-    },
+    
     {
       title: 'Ngày chuyển hàng',
       dataIndex: 'transfer_date',
       key: 'transfer_date',
       render: (date) => formatDate(date),
+    },
+    {
+      title: 'Trạng thái',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status) => (
+         <Tag color={statusColors[status] || 'default'}>
+          {statusLabels[status] || status}
+        </Tag>
+      ),
     },
     {
       title: 'Hành động',
@@ -335,7 +337,7 @@ export default function TransferTable() {
           </Button>
         </div>
         <Button type="primary" onClick={() => setOpenCreate(true)}>
-          Thêm xuất kho
+          Thêm mã đơn hàng
         </Button>
       </div>
 

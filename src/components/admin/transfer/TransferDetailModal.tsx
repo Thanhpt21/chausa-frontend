@@ -5,7 +5,7 @@ import { useTransferDetailsByTransferId } from '@/hooks/transfer-detail/useTrans
 import { useCreateTransferDetail } from '@/hooks/transfer-detail/useCreateTransferDetail';
 import { useDeleteTransferDetail } from '@/hooks/transfer-detail/useDeleteTransferDetail';
 import { useAllProducts } from '@/hooks/product/useAllProducts';
-import { useColorQuantityByProductId } from '@/hooks/product/useColorQuantityByProductId';
+import { useAllColors } from '@/hooks/color/useAllColors';
 import { formatVND } from '@/utils/helpers';
 import { Transfer } from '@/types/transfer.type';
 
@@ -32,11 +32,10 @@ const TransferDetailModal: React.FC<TransferDetailModalProps> = ({ visible, tran
   const [selectedColor, setSelectedColor] = useState<number | undefined>(undefined);
   const [selectedColorTitle, setSelectedColorTitle] = useState<string>('');
   const [selectedSize, setSelectedSize] = useState<string>('');
-  const [quantityError, setQuantityError] = useState<string>('');
-  const [isQuantityExceeded, setIsQuantityExceeded] = useState<boolean>(false);
   const [existingCombinations, setExistingCombinations] = useState<string[]>([]);
-  const [currentStockQuantity, setCurrentStockQuantity] = useState<number>(0);
-  const [availableSizes, setAvailableSizes] = useState<string[]>([]);
+
+  // Danh sách size mặc định
+  const defaultSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
 
   useEffect(() => {
     if (visible) {
@@ -46,88 +45,13 @@ const TransferDetailModal: React.FC<TransferDetailModalProps> = ({ visible, tran
       setSelectedColor(undefined);
       setSelectedColorTitle('');
       setSelectedSize('');
-      setQuantityError('');
-      setIsQuantityExceeded(false);
       setExistingCombinations([]);
-      setCurrentStockQuantity(0);
-      setAvailableSizes([]);
       refetch();
     }
   }, [visible, form, refetch]);
 
   const { data: products, isLoading: isProductsLoading } = useAllProducts({});
-  const { data: colorQuantities, isLoading: isColorLoading, refetch: refetchColorQuantities } = useColorQuantityByProductId(selectedProduct?.id);
-
-  // 👈 HÀM LẤY SỐ LƯỢNG TỒN KHO THEO MÀU VÀ SIZE
-  const getStockQuantity = (colorTitle: string, size: string): number => {
-    if (!colorQuantities?.data) return 0;
-    
-    const stockItem = colorQuantities.data.find((item: any) => 
-      item.colorTitle === colorTitle && item.size === size
-    );
-    
-    return stockItem ? stockItem.remainingQuantity : 0;
-  };
-
-  // 👈 HÀM LẤY DANH SÁCH SIZE CÓ SẴN CHO MÀU ĐÃ CHỌN
-  const getAvailableSizesForColor = (colorTitle: string): string[] => {
-    if (!colorQuantities?.data || !colorTitle) return [];
-    
-    const availableSizes = colorQuantities.data
-      .filter((item: any) => item.colorTitle === colorTitle && item.remainingQuantity > 0)
-      .map((item: any) => item.size);
-    
-    return [...new Set(availableSizes)];
-  };
-
-  // 👈 CẬP NHẬT SỐ LƯỢNG TỒN KHO VÀ DANH SÁCH SIZE KHI MÀU HOẶC DỮ LIỆU THAY ĐỔI
-  useEffect(() => {
-    if (selectedColorTitle && selectedSize) {
-      const stockQty = getStockQuantity(selectedColorTitle, selectedSize);
-      setCurrentStockQuantity(stockQty);
-      
-      const currentQuantity = form.getFieldValue('quantity');
-      if (currentQuantity && currentQuantity > stockQty) {
-        // 👈 TỰ ĐỘNG ĐẶT LẠI GIÁ TRỊ BẰNG TỒN KHO TỐI ĐA
-        form.setFieldsValue({ quantity: stockQty });
-        setQuantityError('');
-        setIsQuantityExceeded(false);
-      } else {
-        setQuantityError('');
-        setIsQuantityExceeded(false);
-      }
-    } else {
-      setCurrentStockQuantity(0);
-      setQuantityError('');
-      setIsQuantityExceeded(false);
-    }
-  }, [selectedColorTitle, selectedSize, colorQuantities]);
-
-  useEffect(() => {
-    if (selectedColorTitle) {
-      const sizes = getAvailableSizesForColor(selectedColorTitle);
-      setAvailableSizes(sizes);
-      
-      if (selectedSize && !sizes.includes(selectedSize)) {
-        setSelectedSize('');
-        form.setFieldsValue({ size: undefined });
-      }
-    } else {
-      setAvailableSizes([]);
-    }
-  }, [selectedColorTitle, colorQuantities]);
-
-  // 👈 REFETCH KHI CHỌN SIZE ĐỂ CẬP NHẬT DỮ LIỆU MỚI NHẤT
-  const handleSizeChange = async (value: string) => {
-    setSelectedSize(value);
-    setQuantityError('');
-    setIsQuantityExceeded(false);
-    form.setFieldsValue({ quantity: undefined });
-    
-    if (selectedProduct?.id) {
-      await refetchColorQuantities();
-    }
-  };
+  const { data: colors, isLoading: isColorsLoading } = useAllColors({});
 
   // Chọn sản phẩm (Model)
   const onProductChange = (value: string) => {
@@ -138,8 +62,6 @@ const TransferDetailModal: React.FC<TransferDetailModalProps> = ({ visible, tran
       setSelectedColor(undefined);
       setSelectedColorTitle('');
       setSelectedSize('');
-      setCurrentStockQuantity(0);
-      setAvailableSizes([]);
       const unitPrice = transferData?.isInternal ? 0 : (product.discount || product.price || 0);
       form.setFieldsValue({
         productId: product.id,
@@ -147,9 +69,8 @@ const TransferDetailModal: React.FC<TransferDetailModalProps> = ({ visible, tran
         size: undefined,
         quantity: undefined,
       });
-      setQuantityError('');
-      setIsQuantityExceeded(false);
 
+      // Lấy danh sách các kết hợp màu-size đã tồn tại cho sản phẩm này
       const existingCombos = data
         ?.filter((detail: any) => detail.productId === product.id)
         .map((detail: any) => `${detail.colorTitle}-${detail.size}`);
@@ -158,82 +79,22 @@ const TransferDetailModal: React.FC<TransferDetailModalProps> = ({ visible, tran
   };
 
   // Chọn màu
-  const onColorChange = async (value: any) => {
-    const selectedColorData = selectedProduct?.colors?.find((c: any) => c.id === value);
+  const onColorChange = (value: any) => {
+    const selectedColorData = colors?.find((c: any) => c.id === value);
     if (selectedColorData) {
       setSelectedColor(value);
       setSelectedColorTitle(selectedColorData.title || '');
-      setQuantityError('');
-      setIsQuantityExceeded(false);
       form.setFieldsValue({ 
         color: value,
         quantity: undefined,
       });
-      
-      if (selectedProduct?.id) {
-        await refetchColorQuantities();
-      }
     }
   };
 
-  // 👈 HÀM XỬ LÝ NHẬP SỐ LƯỢNG - CHẶN HOÀN TOÀN VIỆC NHẬP LỚN HƠN TỒN KHO
-  const handleQuantityChange = (value: number | null) => {
-    if (value === null || value === undefined) {
-      setQuantityError('');
-      setIsQuantityExceeded(false);
-      return;
-    }
-
-    if (value < 1) {
-      setQuantityError('Số lượng phải lớn hơn 0');
-      setIsQuantityExceeded(true);
-      form.setFieldsValue({ quantity: 1 });
-      return;
-    }
-
-    if (selectedColorTitle && selectedSize) {
-      if (value > currentStockQuantity) {
-        // 👈 KHÔNG CHO PHÉP NHẬP - TỰ ĐỘNG ĐẶT LẠI BẰNG TỒN KHO TỐI ĐA
-        form.setFieldsValue({ quantity: currentStockQuantity });
-        setQuantityError(`Số lượng tối đa là ${currentStockQuantity}`);
-        setIsQuantityExceeded(true);
-        message.warning(`Số lượng không được vượt quá ${currentStockQuantity}`);
-      } else {
-        setQuantityError('');
-        setIsQuantityExceeded(false);
-      }
-    }
-  };
-
-  // 👈 HÀM XỬ LÝ ONBLUR - KIỂM TRA LẠI KHI RỜI KHỎI INPUT
-  const handleQuantityBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    const value = form.getFieldValue('quantity');
-    if (value && selectedColorTitle && selectedSize && value > currentStockQuantity) {
-      form.setFieldsValue({ quantity: currentStockQuantity });
-      setQuantityError(`Số lượng tối đa là ${currentStockQuantity}`);
-      setIsQuantityExceeded(true);
-    }
-  };
-
-  // 👈 HÀM XỬ LÝ ONPRESSENTER - KIỂM TRA KHI NHẤN ENTER
-  const handleQuantityPressEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    const value = form.getFieldValue('quantity');
-    if (value && selectedColorTitle && selectedSize && value > currentStockQuantity) {
-      form.setFieldsValue({ quantity: currentStockQuantity });
-      setQuantityError(`Số lượng tối đa là ${currentStockQuantity}`);
-      setIsQuantityExceeded(true);
-      e.preventDefault();
-    }
-  };
-
-  const quantityValidator = (_: any, value: number) => {
-    if (!value || value < 1) {
-      return Promise.reject(new Error('Số lượng phải lớn hơn 0'));
-    }
-    if (value > currentStockQuantity) {
-      return Promise.reject(new Error(`Số lượng không được vượt quá ${currentStockQuantity}`));
-    }
-    return Promise.resolve();
+  // Chọn size
+  const handleSizeChange = (value: string) => {
+    setSelectedSize(value);
+    form.setFieldsValue({ quantity: undefined });
   };
 
   const columns = [
@@ -339,13 +200,13 @@ const TransferDetailModal: React.FC<TransferDetailModalProps> = ({ visible, tran
     }
 
     if (!values.color && !selectedSize) {
-      message.error('Vui lòng chọn màu hoặc size');
+      message.error('Vui lòng chọn màu và size');
       return;
     }
 
     let finalColorTitle = '';
     if (values.color) {
-      const finalColorData = selectedProduct?.colors?.find((c: any) => c.id === values.color);
+      const finalColorData = colors?.find((c: any) => c.id === values.color);
       if (!finalColorData) {
         message.error('Màu đã chọn không hợp lệ.');
         return;
@@ -358,11 +219,6 @@ const TransferDetailModal: React.FC<TransferDetailModalProps> = ({ visible, tran
 
     if (isCombinationExist) {
       message.error(`Sản phẩm '${selectedProduct?.title}' với màu '${finalColorTitle}' và size '${selectedSize}' đã tồn tại trong đơn xuất kho này.`);
-      return;
-    }
-
-    if (values.quantity > currentStockQuantity) {
-      message.error(`Số lượng nhập vào (${values.quantity}) lớn hơn số lượng còn lại trong kho (${currentStockQuantity})`);
       return;
     }
 
@@ -390,10 +246,6 @@ const TransferDetailModal: React.FC<TransferDetailModalProps> = ({ visible, tran
       setSelectedColor(undefined);
       setSelectedColorTitle('');
       setSelectedSize('');
-      setCurrentStockQuantity(0);
-      setAvailableSizes([]);
-      setQuantityError('');
-      setIsQuantityExceeded(false);
       setExistingCombinations([]);
       
       refetch();
@@ -472,8 +324,6 @@ const TransferDetailModal: React.FC<TransferDetailModalProps> = ({ visible, tran
                     setSelectedColor(undefined);
                     setSelectedColorTitle('');
                     setSelectedSize('');
-                    setCurrentStockQuantity(0);
-                    setAvailableSizes([]);
                     const unitPrice = transferData?.isInternal ? 0 : (product.discount || product.price || 0);
                     form.setFieldsValue({
                       sku: product.sku,
@@ -482,8 +332,6 @@ const TransferDetailModal: React.FC<TransferDetailModalProps> = ({ visible, tran
                       size: undefined,
                       quantity: undefined,
                     });
-                    setQuantityError('');
-                    setIsQuantityExceeded(false);
 
                     const existingCombos = data
                       ?.filter((detail: any) => detail.productId === product.id)
@@ -520,61 +368,34 @@ const TransferDetailModal: React.FC<TransferDetailModalProps> = ({ visible, tran
               />
             </Form.Item>
 
-            {selectedProduct && selectedProduct.colors?.length > 0 && (
-              <Form.Item label="Chọn màu" name="color">
-                {isColorLoading ? (
-                  <Spin size="small" />
-                ) : (
-                  <Radio.Group
-                    value={selectedColor}
-                    onChange={(e) => onColorChange(e.target.value)}
-                  >
-                    {selectedProduct.colors
-                      .map((color: any) => {
-                        const availableSizesForThisColor = getAvailableSizesForColor(color.title);
-                        const hasAvailableSizes = availableSizesForThisColor.length > 0;
-                        
-                        return (
-                          <Radio.Button
-                            key={color.id}
-                            value={color.id}
-                            disabled={!hasAvailableSizes}
-                          >
-                            {color.title} {!hasAvailableSizes && '(Hết hàng)'}
-                          </Radio.Button>
-                        );
-                      })}
-                  </Radio.Group>
-                )}
-              </Form.Item>
-            )}
+            {/* Chọn màu từ danh sách tất cả màu */}
+            <Form.Item label="Chọn màu" name="color" rules={[{ required: true, message: 'Vui lòng chọn màu' }]}>
+              {isColorsLoading ? (
+                <Spin size="small" />
+              ) : (
+                <Radio.Group
+                  value={selectedColor}
+                  onChange={(e) => onColorChange(e.target.value)}
+                >
+                  {colors?.map((color: any) => (
+                    <Radio.Button key={color.id} value={color.id}>
+                      {color.title}
+                    </Radio.Button>
+                  ))}
+                </Radio.Group>
+              )}
+            </Form.Item>
 
-            {/* 👈 HIỂN THỊ SỐ LƯỢNG TỒN KHO HIỆN TẠI */}
-            {(selectedColor || selectedSize) && (
-              <div style={{ marginBottom: 16 }}>
-                <Text>Số lượng tồn kho hiện tại: </Text>
-                <Text strong type={currentStockQuantity > 0 ? 'success' : 'danger'}>
-                  {currentStockQuantity}
-                </Text>
-                {colorQuantities?.totalQuantity && (
-                  <Text type="secondary" style={{ marginLeft: 8 }}>
-                    (Tổng tồn kho: {colorQuantities.totalQuantity})
-                  </Text>
-                )}
-              </div>
-            )}
-
-            {/* Form select cho size - CHỈ HIỂN THỊ CÁC SIZE CÓ SẴN */}
-            <Form.Item label="Size" name="size">
+            {/* Chọn size */}
+            <Form.Item label="Size" name="size" rules={[{ required: true, message: 'Vui lòng chọn size' }]}>
               <Select
-                placeholder={availableSizes.length > 0 ? "Chọn size" : "Chọn màu trước"}
+                placeholder="Chọn size"
                 onChange={handleSizeChange}
                 value={selectedSize}
-                disabled={status === 'CANCELLED' || !selectedColorTitle}
+                disabled={status === 'CANCELLED' || !selectedColor}
                 allowClear
-                loading={isColorLoading}
               >
-                {availableSizes.map((size: string) => {
+                {defaultSizes.map((size: string) => {
                   const combinationKey = `${selectedColorTitle}-${size}`;
                   const isSizeAlreadyAdded = existingCombinations.includes(combinationKey);
                   
@@ -588,45 +409,51 @@ const TransferDetailModal: React.FC<TransferDetailModalProps> = ({ visible, tran
                     </Select.Option>
                   );
                 })}
-                {availableSizes.length === 0 && selectedColorTitle && (
-                  <Select.Option value="" disabled>
-                    Không có size nào có sẵn
-                  </Select.Option>
-                )}
+                {/* Option nhập size tùy chỉnh */}
+                <Select.Option value="custom">+ Nhập size khác</Select.Option>
               </Select>
-              {selectedColorTitle && availableSizes.length === 0 && (
-                <Text type="danger" style={{ fontSize: '12px', marginTop: '4px' }}>
-                  Màu này không có size nào có sẵn trong kho
-                </Text>
-              )}
             </Form.Item>
 
-            {(selectedColor || selectedSize) && (
-              <Form.Item
-                label="Số lượng"
-                name="quantity"
-                rules={[
-                  { required: true, message: 'Vui lòng nhập số lượng' },
-                  { validator: quantityValidator }
-                ]}
-                validateStatus={quantityError ? 'error' : ''}
-                help={quantityError || ''}
+            {/* Input nhập size tùy chỉnh */}
+            {selectedSize === 'custom' && (
+              <Form.Item 
+                label="Nhập size" 
+                name="customSize"
+                rules={[{ required: true, message: 'Vui lòng nhập size' }]}
               >
-                <InputNumber
-                  placeholder={`Nhập số lượng (tối đa: ${currentStockQuantity})`}
-                  min={1}
-                  max={currentStockQuantity}
-                  style={{ width: '100%' }}
-                  onChange={handleQuantityChange}
-                  onBlur={handleQuantityBlur}
-                  onPressEnter={handleQuantityPressEnter}
-                  disabled={status === 'CANCELLED' || currentStockQuantity === 0}
-                  step={1}
-                  precision={0}
-                  controls={true}
+                <Input 
+                  placeholder="Nhập size tùy chỉnh"
+                  disabled={status === 'CANCELLED'}
+                  onChange={(e) => {
+                    setSelectedSize(e.target.value);
+                    form.setFieldsValue({ size: e.target.value });
+                  }}
                 />
               </Form.Item>
             )}
+
+            <Form.Item
+              label="Số lượng"
+              name="quantity"
+              rules={[
+                { required: true, message: 'Vui lòng nhập số lượng' },
+                { 
+                  type: 'number',
+                  min: 1,
+                  message: 'Số lượng phải lớn hơn 0'
+                }
+              ]}
+            >
+              <InputNumber
+                placeholder="Nhập số lượng"
+                min={1}
+                style={{ width: '100%' }}
+                disabled={status === 'CANCELLED'}
+                step={1}
+                precision={0}
+                controls={true}
+              />
+            </Form.Item>
 
             <Form.Item label="Đơn giá" name="unitPrice" rules={[{ required: true, message: 'Vui lòng nhập đơn giá' }]}>
               <InputNumber
@@ -648,7 +475,7 @@ const TransferDetailModal: React.FC<TransferDetailModalProps> = ({ visible, tran
                 type="primary"
                 htmlType="submit"
                 loading={isPending}
-                disabled={isQuantityExceeded || status === 'CANCELLED' || currentStockQuantity === 0}
+                disabled={status === 'CANCELLED'}
                 block
               >
                 Thêm sản phẩm

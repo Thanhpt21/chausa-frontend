@@ -310,7 +310,7 @@ export const ProductUpdateModal = ({
                     </Col>
                 </Row>
                                 {/* Chọn màu sắc */}
-                <Form.Item label="Chọn màu" name="colors" rules={[{ required: true, message: 'Vui lòng chọn màu sắc' }]}>
+                {/* <Form.Item label="Chọn màu" name="colors" rules={[{ required: true, message: 'Vui lòng chọn màu sắc' }]}>
                     <Checkbox.Group
                         value={selectedColors} // Controlled by selectedColors state
                         onChange={handleColorChange}
@@ -327,7 +327,7 @@ export const ProductUpdateModal = ({
                             )}
                         </Row>
                     </Checkbox.Group>
-                </Form.Item>
+                </Form.Item> */}
 
                   <Row gutter={16}>
                     <Col span={12}>

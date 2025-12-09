@@ -132,9 +132,9 @@ import ExportFileProjectModal from './ExportFileProjectModal';
               id: exportItem.id,
               status: 'EXPIRED' as ExportStatus,
             });
-            console.log(`Đã cập nhật phiếu xuất kho ID ${exportItem.id} sang EXPIRED`);
+            console.log(`Đã cập nhật Mã đơn hàng sang EXPIRED`);
           } catch (error) {
-            console.error(`Lỗi khi cập nhật phiếu xuất kho ID ${exportItem.id}:`, error);
+            console.error(`Lỗi khi cập nhật Mã đơn hàng:`, error);
           }
         }
 
@@ -487,7 +487,7 @@ import ExportFileProjectModal from './ExportFileProjectModal';
           const prepaymentRes = await createPrepayment({
             customerId: selectedExport.customerId,
             amountMoney: cleanedAmount,
-            note: `Tạm ứng cho phiếu xuất kho #${selectedExport.id}`,
+            note: `Tạm ứng cho Mã đơn hàng #${selectedExport.id}`,
             status: 'PENDING',
           });
 
@@ -500,7 +500,7 @@ import ExportFileProjectModal from './ExportFileProjectModal';
           message.success(`Đã tạo khoản tạm ứng ${formatVND(cleanedAmount)} cho khách hàng`);
         }
 
-        // ✅ Cập nhật phiếu xuất kho
+        // ✅ Cập nhật Mã đơn hàng
         await updateExport({
           id: selectedExport.id,
           data: {
@@ -730,7 +730,7 @@ import ExportFileProjectModal from './ExportFileProjectModal';
           destroyOnClose
         >
           <Form layout="vertical" form={completeForm}>
-            <p>Bạn có chắc chắn muốn hoàn thành phiếu xuất kho này?</p>
+            <p>Bạn có chắc chắn muốn hoàn thành Mã đơn hàng này?</p>
 
             <Form.Item
               label="Chi phí phát sinh tăng giảm (nếu có)"

@@ -102,20 +102,20 @@ const TransferCreateModal = ({ open, onClose, refetch }: TransferCreateModalProp
 
       await createTransfer(payload);
 
-      message.success('Tạo phiếu xuất kho thành công');
+      message.success('Tạo Mã đơn hàng thành công');
       onClose();
       form.resetFields();
       refetch?.();
       setCustomerId(undefined);
       setIsExistingCustomer(false);
     } catch (error: any) {
-      message.error(error?.response?.data?.message || 'Lỗi tạo phiếu xuất kho');
+      message.error(error?.response?.data?.message || 'Lỗi tạo Mã đơn hàng');
     }
   };
 
   return (
     <Modal
-      title="Thêm phiếu xuất kho"
+      title="Thêm Mã đơn hàng"
       open={open}
       onCancel={onClose}
       footer={null}
@@ -178,6 +178,14 @@ const TransferCreateModal = ({ open, onClose, refetch }: TransferCreateModalProp
 
         <Divider>Thông tin xuất kho</Divider>
 
+          <Form.Item
+            label="Mã đơn hàng"
+            name="note"
+            rules={[{ required: true, message: 'Vui lòng nhập mã đơn hàng' }]}
+          >
+            <Input placeholder="Nhập mã đơn hàng" />
+          </Form.Item>
+
         <Row gutter={16}>
           <Col span={12}>
             <Form.Item
@@ -210,13 +218,11 @@ const TransferCreateModal = ({ open, onClose, refetch }: TransferCreateModalProp
           </Col>
         </Row>
 
-        <Form.Item label="Ghi chú" name="note">
-          <Input.TextArea rows={3} placeholder="Ghi chú thêm (nếu có)" />
-        </Form.Item>
+       
 
         <Form.Item>
           <Button type="primary" htmlType="submit" loading={isPending} block>
-            Tạo phiếu xuất kho
+            Tạo Mã đơn hàng
           </Button>
         </Form.Item>
       </Form>

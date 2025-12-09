@@ -249,12 +249,12 @@ export default function ProductTable() {
           </Button>
         </div>
         <div className='flex justify-center gap-2'>
-            <Button danger onClick={() => setOpenOverExportedModal(true)}>
+            {/* <Button danger onClick={() => setOpenOverExportedModal(true)}>
               Sản phẩm âm kho
             </Button>
             <Button onClick={() => setOpenListModal(true)}>
               Xem tất cả
-            </Button>
+            </Button> */}
              <Button type="primary" onClick={() => setOpenCreate(true)}>
               Tạo mới
             </Button>

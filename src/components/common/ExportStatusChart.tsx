@@ -30,7 +30,7 @@ interface Props {
 
 const ExportStatusChart: FC<Props> = ({ stats }) => {
   const data: ChartData<'bar'> = {
-    labels: ['Phiếu xuất kho'],
+    labels: ['Mã đơn hàng'],
     datasets: [
       {
         label: 'Chờ xử lý',
@@ -64,7 +64,7 @@ const ExportStatusChart: FC<Props> = ({ stats }) => {
     responsive: true,
     plugins: {
       legend: { position: 'top' },
-      title: { display: true, text: 'Trạng thái phiếu xuất kho' },
+      title: { display: true, text: 'Trạng thái Mã đơn hàng' },
     },
     scales: {
       x: { stacked: true },

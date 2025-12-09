@@ -82,7 +82,7 @@ const TransferFileExport = ({
   return (
     <Modal
       visible={visible}
-      title={`Chi tiết phiếu xuất kho #${transferId}`}
+      title={`Chi tiết Mã đơn hàng #${transferId}`}
       onCancel={onClose}
       footer={[
         <Button key="back" onClick={onClose}>
@@ -106,11 +106,11 @@ const TransferFileExport = ({
         </div>
 
         <div className="px-5 mt-5 flex items-center justify-center">
-            <div className='text-base'><strong>PHIẾU XUẤT KHO / GIAO HÀNG</strong></div>
+            <div className='text-base'><strong>MÃ ĐƠN HÀNG</strong></div>
         </div>
         <div className="px-5 flex justify-center italic">{formattedDate}</div>
         <div className="px-5 flex items-center justify-center">
-            <div>Số: EXK_{customer?.phoneNumber}/{transferId}</div>
+            <div>Số: CS_{customer?.phoneNumber}/{transferId}</div>
         </div>
 
 
@@ -137,7 +137,7 @@ const TransferFileExport = ({
               >
                 {warehouses.map((warehouse) => (
                   <Select.Option key={warehouse.id} value={warehouse.address}>
-                    {warehouse.address}
+                    <span className='text-sm'>{warehouse.address}</span>
                   </Select.Option>
                 ))}
               </Select>
@@ -154,7 +154,6 @@ const TransferFileExport = ({
                 <th className="px-3 py-2 border text-left w-[8%]">Ghi chú</th>
                 <th className="px-3 py-2 border text-left w-[8%]">Đơn vị</th>
                 <th className="px-3 py-2 text-left border w-[5%]">SL hợp đồng</th> 
-                <th className="px-3 py-2 text-left border w-[5%]">SL thực xuất</th> 
                 <th className="px-3 py-2 border text-left w-[12%]">Đơn giá</th>
                 <th className="px-3 py-2 border text-left w-[12%]">Thành tiền</th>
               </tr>
@@ -175,7 +174,6 @@ const TransferFileExport = ({
                   <td className="px-3 py-2 border">{item.colorTitle || '-'}</td>
                   <td className="px-3 py-2 border">{item.product.unit || '-'}</td>
                   <td className="px-3 py-2 border">{item.quantity}</td>
-                  <td className="px-3 py-2 border">{item.quantity}</td>
                   <td className="px-3 py-2 border">{formatVND(item.unitPrice)}</td>
                   <td className="px-3 py-2 border">{formatVND(item.finalPrice)}</td>
                 </tr>
@@ -184,7 +182,7 @@ const TransferFileExport = ({
           </table>
         </div>
             <div className='px-5 flex justify-end'>
-            <div className="w-full">
+            <div className="w-full py-4">
               <div className="flex justify-between">
                 <div><strong>Tổng cộng :</strong></div>
                 <div>{formatVND(transferData.total_amount)}</div>
