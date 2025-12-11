@@ -29,9 +29,7 @@ import { ProductUpdateModal } from './ProductUpdateModal';
 import { useAllCategories } from '@/hooks/category/useAllCategories';
 import { formatVND } from '@/utils/helpers';
 import { Category } from '@/types/category.type';
-import { InventoryModal } from './InventoryModal';
-import { ProductListModal } from './ProductListModal';
-import { OverExportedProductModal } from './OverExportedProductModal';
+
 
 export default function ProductTable() {
   const [page, setPage] = useState(1);
@@ -41,11 +39,6 @@ export default function ProductTable() {
   const [openUpdate, setOpenUpdate] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [filterCategoryId, setFilterCategoryId] = useState<number | undefined>(undefined);
-
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
-  const [openListModal, setOpenListModal] = useState(false);
-  const [openOverExportedModal, setOpenOverExportedModal] = useState(false);
 
 
 
@@ -111,32 +104,11 @@ export default function ProductTable() {
       key: 'price',
        render: (price) => formatVND(price) || '-',
     },
-      {
-      title: 'Giảm giá',
-      dataIndex: 'discount',
-      key: 'discount',
-       render: (discount) => formatVND(discount) || '-',
-    },
     {
       title: 'Danh mục',
       key: 'category',
       align: 'center',
       render: (record) => <span>{record.category?.title || '—'}</span>,
-    },
-    
-     {
-      title: 'Kho',
-      key: 'stock',
-      render: (record) => {
-        const { stock } = record;
-        return (
-          <>
-            <div><strong>Nhập kho:</strong> {stock?.totalImported || 0}</div>
-            <div><strong>Xuất kho:</strong> {stock?.totalExported || 0}</div>
-            <div><strong>Tồn kho:</strong> {stock?.remainingQuantity || 0}</div>
-          </>
-        );
-      },
     },
     {
       title: 'Hành động',
@@ -147,15 +119,7 @@ export default function ProductTable() {
 
         return (
           <Space size="middle">
-            <Tooltip title="Xem kho sản phẩm">
-              <EyeOutlined
-                style={{ color: '#52c41a', cursor: 'pointer' }}
-                onClick={() => {
-                  setSelectedProductId(record.id);
-                  setModalVisible(true);
-                }}
-              />
-            </Tooltip>
+          
             <Tooltip title="Chỉnh sửa">
               <EditOutlined
                 style={{ color: '#1890ff', cursor: 'pointer' }}
@@ -249,12 +213,6 @@ export default function ProductTable() {
           </Button>
         </div>
         <div className='flex justify-center gap-2'>
-            {/* <Button danger onClick={() => setOpenOverExportedModal(true)}>
-              Sản phẩm âm kho
-            </Button>
-            <Button onClick={() => setOpenListModal(true)}>
-              Xem tất cả
-            </Button> */}
              <Button type="primary" onClick={() => setOpenCreate(true)}>
               Tạo mới
             </Button>
@@ -290,26 +248,8 @@ export default function ProductTable() {
         categories={allCategories || []}
       />
 
-       <ProductListModal
-          open={openListModal}
-          onClose={() => setOpenListModal(false)}
-        />
 
-        <OverExportedProductModal
-          open={openOverExportedModal}
-          onClose={() => setOpenOverExportedModal(false)}
-        />
-
-      {selectedProductId !== null && (
-        <InventoryModal
-          productId={selectedProductId}
-          visible={modalVisible}
-          onClose={() => {
-            setModalVisible(false);
-            setSelectedProductId(null);
-          }}
-        />
-      )}
+    
     </div>
   );
 }
