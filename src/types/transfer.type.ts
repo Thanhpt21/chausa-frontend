@@ -32,6 +32,7 @@ export interface Transfer {
     description: string;          // Mô tả sản phẩm
     model: string;                // Mã model sản phẩm
     quantity: number;             // Số lượng chuyển
+    size: number;
     unitPrice: number;            // Đơn giá sản phẩm
     totalPrice: number;           // Thành tiền = quantity * unitPrice
     note?: string;                // Ghi chú (nếu có)
