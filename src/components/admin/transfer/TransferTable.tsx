@@ -38,6 +38,7 @@ import { TransferUpdateModal } from './TransferUpdateModal';
 import TransferDetailModal from './TransferDetailModal';
 import TransferFileExport from './TransferFileExport';
 import { useUpdateTransferStatus } from '@/hooks/transfer/useUpdateTransferStatus';
+import TransferOrderDetailModal from './TransferOrderDetailModal';
 
 const { RangePicker } = DatePicker;
 
@@ -67,6 +68,7 @@ export default function TransferTable() {
   const [openUpdate, setOpenUpdate] = useState(false);
   const [openDetail, setOpenDetail] = useState(false);
   const [openExportModal, setOpenExportModal] = useState(false);
+  const [openOrderCreate, setOpenOrderCreate] = useState(false);
   
   // Thêm state cho bộ lọc thời gian
   const [startDate, setStartDate] = useState<string | undefined>(undefined);
@@ -185,12 +187,7 @@ export default function TransferTable() {
       dataIndex: ['user', 'name'],
       key: 'userName',
     },
-    {
-      title: 'Loại xuất kho',
-      dataIndex: 'isInternal',
-      key: 'isInternal',
-      render: (isInternal) => isInternal ? 'Xuất kho nội bộ' : 'Xuất kho bán hàng',
-    },
+   
     {
       title: 'Tổng tiền',
       dataIndex: 'total_amount',
@@ -198,7 +195,7 @@ export default function TransferTable() {
       render: (amount) => formatVND(amount),
     },
     {
-      title: 'Ngày chuyển hàng',
+      title: 'Ngày đặt hàng',
       dataIndex: 'transfer_date',
       key: 'transfer_date',
       render: (date) => formatDate(date),
@@ -239,6 +236,15 @@ export default function TransferTable() {
               </Tooltip>
             ) : (
               <>
+                <Tooltip title="Tạo đơn đặt hàng">
+                  <AppstoreAddOutlined
+                    style={{ color: '#52c41a', cursor: 'pointer' }}
+                    onClick={() => {
+                      setSelectedTransfer(record);   // chọn transfer hiện tại
+                      setOpenOrderCreate(true);      // mở modal tạo đơn
+                    }}
+                  />
+                </Tooltip>
                 <Tooltip title="Xem file xuất kho">
                   <FileDoneOutlined
                     style={{ color: '#F77E02', cursor: 'pointer' }}
@@ -442,6 +448,16 @@ export default function TransferTable() {
         transferData={selectedTransfer}
         onClose={() => setOpenExportModal(false)}
       />
+
+     <TransferOrderDetailModal
+        visible={openOrderCreate}
+        transferId={selectedTransfer?.id || 0}
+        transferData={selectedTransfer}
+        onClose={() => setOpenOrderCreate(false)}
+        refetchTransfer={refetch}
+        status={selectedTransfer?.status || 'PENDING'}
+      />
+
     </div>
   );
 }

@@ -189,7 +189,7 @@ const TransferCreateModal = ({ open, onClose, refetch }: TransferCreateModalProp
         <Row gutter={16}>
           <Col span={12}>
             <Form.Item
-              label="Ngày xuất kho"
+              label="Ngày đặt hàng"
               name="transfer_date"
               rules={[{ required: true, message: 'Vui lòng chọn ngày xuất kho' }]}
             >
@@ -203,15 +203,14 @@ const TransferCreateModal = ({ open, onClose, refetch }: TransferCreateModalProp
           </Col>
            <Col span={12}>
             <Form.Item
-              label="Loại xuất kho"
+              label="Loại"
               name="isInternal"
-              rules={[{ required: true, message: 'Vui lòng chọn loại xuất kho' }]}
+              rules={[{ required: true, message: 'Vui lòng chọn loại' }]}
               initialValue={false} // mặc định là xuất kho bán hàng
             >
               <Select
                 options={[
-                  { label: 'Xuất kho bán hàng', value: false },
-                  { label: 'Xuất kho nội bộ', value: true },
+                  { label: 'Đặt hàng', value: false },
                 ]}
               />
             </Form.Item>
