@@ -22,6 +22,8 @@ interface TransferDetailModalProps {
 
 const TransferDetailModal: React.FC<TransferDetailModalProps> = ({ visible, transferId, transferData, onClose, refetchTransfer, status }) => {
   const { data, isLoading, refetch } = useTransferDetailsByTransferId(transferId);
+
+    console.log("data", data)
   const { mutateAsync: createDetail, isPending } = useCreateTransferDetail();
   const { mutateAsync: deleteDetail } = useDeleteTransferDetail();
 

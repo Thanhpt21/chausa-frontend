@@ -24,6 +24,8 @@ interface TransferOrderDetailModalProps {
 
 const TransferOrderDetailModal: React.FC<TransferOrderDetailModalProps> = ({ visible, transferId, transferData, onClose, refetchTransfer, status }) => {
   const { data, isLoading, refetch } = useTransferOrderDetailsByTransferId(transferId);
+
+    console.log("data", data)
   const { mutateAsync: createDetail, isPending } = useCreateTransferOrderDetail();
   const { mutateAsync: deleteDetail } = useDeleteTransferOrderDetail();
 
@@ -116,41 +118,48 @@ const TransferOrderDetailModal: React.FC<TransferOrderDetailModalProps> = ({ vis
     }] : [])
   ];
 
-  const onFinish = async (values: any) => {
-    if (!selectedProduct) return message.error('Vui lòng chọn sản phẩm');
-    if (!selectedColor || !selectedSize) return message.error('Vui lòng chọn màu và size');
+const onFinish = async (values: any) => {
+  if (!selectedProduct) return message.error('Vui lòng chọn sản phẩm');
+  if (!selectedColor || !selectedSize) return message.error('Vui lòng chọn màu và size');
 
-    const combinationKey = `${selectedColorTitle}-${selectedSize}`;
-    if (existingCombinations.includes(combinationKey)) {
-      return message.error(`Sản phẩm này với màu và size đã tồn tại`);
-    }
+  const combinationKey = `${selectedColorTitle}-${selectedSize}`;
+  if (existingCombinations.includes(combinationKey)) {
+    return message.error(`Sản phẩm này với màu và size đã tồn tại`);
+  }
 
-    if (!values.quantity || values.quantity < 1) return message.error('Số lượng phải > 0');
+  if (!values.quantity || values.quantity < 1) return message.error('Số lượng phải > 0');
 
-    try {
-      await createDetail({
-        transferId,
-        productId: selectedProduct.id,
-        color: selectedColor,
-        colorTitle: selectedColorTitle,
-        size: selectedSize,
-        quantity: values.quantity,
-        unit: selectedProduct.unit,
-        note: values.note,
-      });
-      message.success('Thêm chi tiết thành công');
-      form.resetFields();
-      setSelectedProduct(null);
-      setSelectedColor(undefined);
-      setSelectedColorTitle('');
-      setSelectedSize('');
-      setExistingCombinations([]);
-      refetch();
-      refetchTransfer();
-    } catch (error: any) {
-      message.error(error?.response?.data?.message || 'Lỗi khi thêm chi tiết');
-    }
-  };
+  // Tính unitPrice: nếu là chuyển nội bộ thì 0, nếu không thì lấy từ form (người dùng nhập) hoặc fallback từ product
+  const unitPrice = transferData?.isInternal 
+    ? 0 
+    : (values.unitPrice ?? selectedProduct.discount ?? selectedProduct.price ?? 0);
+
+  try {
+    await createDetail({
+      transferId,
+      productId: selectedProduct.id,
+      color: selectedColor,
+      colorTitle: selectedColorTitle,
+      size: selectedSize,
+      quantity: values.quantity,
+      unit: selectedProduct.unit,
+      unitPrice, // ← Thêm trường này
+      note: values.note || null,
+    });
+
+    message.success('Thêm chi tiết thành công');
+    form.resetFields();
+    setSelectedProduct(null);
+    setSelectedColor(undefined);
+    setSelectedColorTitle('');
+    setSelectedSize('');
+    setExistingCombinations([]);
+    refetch();
+    refetchTransfer();
+  } catch (error: any) {
+    message.error(error?.response?.data?.message || 'Lỗi khi thêm chi tiết');
+  }
+};
 
   return (
     <Modal
@@ -212,6 +221,17 @@ const TransferOrderDetailModal: React.FC<TransferOrderDetailModalProps> = ({ vis
             <Form.Item label="Số lượng" name="quantity" rules={[{ required: true }]}>
               <InputNumber min={1} style={{ width: '100%' }} />
             </Form.Item>
+
+              <Form.Item label="Đơn giá" name="unitPrice" rules={[{ required: true, message: 'Vui lòng nhập đơn giá' }]}>
+                          <InputNumber
+                            placeholder="Nhập đơn giá"
+                            min={0}
+                            style={{ width: '100%' }}
+                            formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                            parser={(value) => value!.replace(/\$\s?|(,*)/g, '') as any}
+                            disabled={status === 'CANCELLED' || transferData?.isInternal}
+                          />
+                        </Form.Item>
 
             <Form.Item label="Ghi chú" name="note">
               <Input.TextArea rows={3} />

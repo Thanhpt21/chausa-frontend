@@ -11,6 +11,7 @@ interface UpdateTransferOrderDetailParams {
     size?: string;
     note?: string;
     unit?: string;
+      unitPrice: number;
   };
 }
 

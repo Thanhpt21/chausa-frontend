@@ -8,7 +8,7 @@ export const useTransferOrderDetailsByTransferId = (transferId?: number) => {
     enabled: !!transferId,
     queryFn: async () => {
       const res = await api.get(`/transfer-order-details/by-transfer/${transferId}`);
-      return res.data.data;
+      return res.data;
     },
     refetchOnWindowFocus: false,
   });

@@ -6,6 +6,7 @@ interface CreateTransferOrderDetailParams {
   transferId: number;
   productId: number;
   quantity: number;
+    unitPrice: number;
   color?: number;
   colorTitle?: string;
   size?: string;
