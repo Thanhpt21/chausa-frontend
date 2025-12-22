@@ -36,7 +36,7 @@ const TransferOrderDetailModal: React.FC<TransferOrderDetailModalProps> = ({ vis
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [existingCombinations, setExistingCombinations] = useState<string[]>([]);
 
-  const defaultSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+  const defaultSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'FREESIZE'];
 
   const { data: products, isLoading: isProductsLoading } = useAllProducts({});
   const { data: colors, isLoading: isColorsLoading } = useAllColors({});
