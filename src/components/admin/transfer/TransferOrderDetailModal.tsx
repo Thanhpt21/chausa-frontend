@@ -250,6 +250,20 @@ const onFinish = async (values: any) => {
         dataSource={data}
         rowKey="id"
         pagination={false}
+        footer={() => {
+          const total = data?.reduce((sum: number, item: any) => {
+            return sum + (item.finalPrice || item.quantity * item.unitPrice || 0);
+          }, 0) || 0;
+
+          return (
+            <div style={{ textAlign: 'right', padding: '12px 0', fontWeight: 'bold' }}>
+              <Text strong style={{ fontSize: 16 }}>Tổng thành tiền: </Text>
+              <Text strong type="danger" style={{ fontSize: 16 }}>
+                {formatVND(total)}
+              </Text>
+            </div>
+          );
+        }}
       />
     </Modal>
   );
