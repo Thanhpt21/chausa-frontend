@@ -196,7 +196,7 @@ const TransferFileExport = ({
           <div className="text-center py-8"><Spin /></div>
         ) : (
           <>
-            <div className="px-5 mt-6"><strong>1. CHI TIẾT ĐẶT HÀNG</strong></div>
+            <div className="px-5 mt-6"><strong>1. CHI TIẾT ĐẶT HÀNG {transferData.note || '-'}</strong></div>
             <div className="overflow-x-auto px-5 mt-2">
               <table className="pdf-table" style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse' }}>
                 <thead>
@@ -241,7 +241,7 @@ const TransferFileExport = ({
         )}
 
         {/* BẢNG 2: CHI TIẾT XUẤT KHO THỰC TẾ */}
-        <div className="px-5 mt-8"><strong>2. CHI TIẾT XUẤT KHO THỰC TẾ</strong></div>
+        <div className="px-5 mt-8"><strong>2. CHI TIẾT XUẤT KHO THỰC TẾ </strong> {transferData.note || '-'}</div>
         <div className="overflow-x-auto px-5 mt-2">
           <table className="pdf-table" style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse' }}>
             <thead>
@@ -284,7 +284,7 @@ const TransferFileExport = ({
         {/* BẢNG 3: CHÊNH LỆCH */}
         {hasDifference && (
           <>
-            <div className="px-5 mt-8"><strong style={{ color: 'red' }}>3. CHÊNH LỆCH GIỮA ĐẶT HÀNG VÀ XUẤT KHO</strong></div>
+            <div className="px-5 mt-8"><strong style={{ color: 'red' }}>3. CHÊNH LỆCH GIỮA ĐẶT HÀNG VÀ XUẤT KHO {transferData.note || '-'}</strong></div>
             <div className="overflow-x-auto px-5 mt-2">
               <table className="pdf-table" style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse' }}>
                 <thead>
