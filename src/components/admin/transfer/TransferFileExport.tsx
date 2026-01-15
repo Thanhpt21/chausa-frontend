@@ -71,7 +71,7 @@ const TransferFileExport = ({
 
       const options = {
         margin: [10, 10, 10, 10],
-        filename: `Don_ma_hang_${transferData.note}}.pdf`,
+        filename: `Don_ma_hang_${transferData.note}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { 
           scale: 2, 
